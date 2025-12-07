@@ -158,19 +158,21 @@ npx prisma migrate status
 │   │       ├── register/    # POST /api/auth/register
 │   │       └── confirm/     # POST /api/auth/confirm
 │   ├── components/          # Componentes reutilizáveis
-│   │   └── ui/
-│   │       ├── Alert.tsx    # Componente de alerta
-│   │       ├── Button.tsx   # Componente de botão
-│   │       ├── CodeInput.tsx # Input para código de verificação
-│   │       ├── Input.tsx    # Componente de input
-│   │       └── index.ts     # Exportações
+│   │   ├── ui/
+│   │   │   ├── Alert.tsx    # Componente de alerta
+│   │   │   ├── Button.tsx   # Componente de botão
+│   │   │   ├── CodeInput.tsx # Input para código de verificação
+│   │   │   ├── Input.tsx    # Componente de input
+│   │   │   └── index.ts     # Exportações
+│   │   ├── Header.tsx       # Cabeçalho com navegação
+│   │   └── BackgroundEffects.tsx # Efeitos de fundo animados
 │   ├── generated/           # Cliente Prisma gerado
 │   ├── lib/                 # Utilitários
 │   │   ├── db.ts           # Conexão com banco de dados
 │   │   └── email.ts        # Serviço de e-mail
 │   ├── globals.css         # Estilos globais
 │   ├── layout.tsx          # Layout principal
-│   └── page.tsx            # Página inicial
+│   └── page.tsx            # Página inicial (landing page)
 ├── prisma/
 │   ├── migrations/         # Migrations do banco
 │   └── schema.prisma       # Schema do Prisma
