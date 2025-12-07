@@ -13,10 +13,13 @@ function createPrismaClient() {
     user: process.env.DATABASE_USER || "root",
     password: process.env.DATABASE_PASSWORD || "password",
     database: process.env.DATABASE_NAME || "vestra",
-    connectionLimit: 5,
+    connectionLimit: 10,
   });
 
-  return new PrismaClient({ adapter });
+  return new PrismaClient({ 
+    adapter,
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient();

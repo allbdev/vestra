@@ -152,11 +152,13 @@ npx prisma migrate status
 ```
 ├── app/
 │   ├── (auth)/              # Rotas de autenticação
-│   │   └── register/        # Página de cadastro
+│   │   ├── register/        # Página de cadastro
+│   │   └── login/           # Página de login
 │   ├── api/                 # API Routes
 │   │   └── auth/
 │   │       ├── register/    # POST /api/auth/register
-│   │       └── confirm/     # POST /api/auth/confirm
+│   │       ├── confirm/     # POST /api/auth/confirm
+│   │       └── login/       # POST /api/auth/login
 │   ├── components/          # Componentes reutilizáveis
 │   │   ├── ui/
 │   │   │   ├── Alert.tsx    # Componente de alerta
@@ -169,7 +171,8 @@ npx prisma migrate status
 │   ├── generated/           # Cliente Prisma gerado
 │   ├── lib/                 # Utilitários
 │   │   ├── db.ts           # Conexão com banco de dados
-│   │   └── email.ts        # Serviço de e-mail
+│   │   ├── email.ts        # Serviço de e-mail
+│   │   └── auth.ts         # Funções de autenticação (session tokens)
 │   ├── globals.css         # Estilos globais
 │   ├── layout.tsx          # Layout principal
 │   └── page.tsx            # Página inicial (landing page)
@@ -244,7 +247,8 @@ import { Alert } from "@/app/components/ui";
 - [x] Cadastro de usuário com confirmação por e-mail
 - [x] Código de confirmação com expiração de 5 minutos
 - [x] Validação de formulários com React Hook Form + Yup
-- [ ] Login
+- [x] Login com autenticação por sessão
+- [x] Armazenamento de sessões no banco de dados
 - [ ] Recuperação de senha
 - [ ] Logout
 
