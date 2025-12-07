@@ -48,13 +48,13 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Something went wrong");
+        setError(data.error || "Algo deu errado");
         return;
       }
 
       setStep("confirm");
     } catch {
-      setError("Network error. Please try again.");
+      setError("Erro de conexão. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export default function RegisterPage() {
     const code = confirmationCode.join("");
     
     if (code.length !== 6) {
-      setError("Please enter the complete 6-digit code");
+      setError("Digite o código completo de 6 dígitos");
       return;
     }
 
@@ -115,13 +115,13 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid confirmation code");
+        setError(data.error || "Código de confirmação inválido");
         return;
       }
 
       setSuccess(true);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Erro de conexão. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -146,13 +146,13 @@ export default function RegisterPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
-              <p className="text-muted mb-6">Your account has been successfully created. You can now sign in.</p>
+              <h2 className="text-2xl font-bold mb-2">Conta Criada!</h2>
+              <p className="text-muted mb-6">Sua conta foi criada com sucesso. Agora você pode entrar.</p>
               <Link
                 href="/login"
                 className="inline-block w-full py-3 px-4 bg-primary hover:bg-primary-hover text-background font-semibold rounded-xl transition-all duration-200"
               >
-                Sign In
+                Entrar
               </Link>
             </div>
           </div>
@@ -173,8 +173,8 @@ export default function RegisterPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Finance</h1>
-          <p className="text-muted mt-2">Take control of your money</p>
+          <h1 className="text-3xl font-bold tracking-tight">Vestra</h1>
+          <p className="text-muted mt-2">Controle suas finanças</p>
         </div>
 
         {/* Card */}
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                   </svg>
                 ) : "1"}
               </div>
-              <span className="text-sm font-medium hidden sm:inline">Details</span>
+              <span className="text-sm font-medium hidden sm:inline">Dados</span>
             </div>
             <div className={`w-12 h-0.5 rounded ${step === "confirm" ? "bg-primary" : "bg-border"}`} />
             <div className={`flex items-center gap-2 ${step === "confirm" ? "text-foreground" : "text-muted"}`}>
@@ -200,7 +200,7 @@ export default function RegisterPage() {
               }`}>
                 2
               </div>
-              <span className="text-sm font-medium hidden sm:inline">Verify</span>
+              <span className="text-sm font-medium hidden sm:inline">Verificar</span>
             </div>
           </div>
 
@@ -208,7 +208,7 @@ export default function RegisterPage() {
             <form onSubmit={handleRegisterSubmit} className="space-y-5">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-muted mb-2">
-                  Full Name
+                  Nome Completo
                 </label>
                 <input
                   type="text"
@@ -217,13 +217,13 @@ export default function RegisterPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="John Doe"
+                  placeholder="João Silva"
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-muted mb-2">
-                  Email Address <span className="text-primary">*</span>
+                  E-mail <span className="text-primary">*</span>
                 </label>
                 <input
                   type="email"
@@ -233,13 +233,13 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="john@example.com"
+                  placeholder="joao@exemplo.com"
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-muted mb-2">
-                  Password <span className="text-primary">*</span>
+                  Senha <span className="text-primary">*</span>
                 </label>
                 <input
                   type="password"
@@ -251,12 +251,12 @@ export default function RegisterPage() {
                   className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
                   placeholder="••••••••"
                 />
-                <p className="text-xs text-muted mt-1.5">Minimum 8 characters</p>
+                <p className="text-xs text-muted mt-1.5">Mínimo de 8 caracteres</p>
               </div>
 
               <div>
                 <label htmlFor="password_confirmation" className="block text-sm font-medium text-muted mb-2">
-                  Confirm Password <span className="text-primary">*</span>
+                  Confirmar Senha <span className="text-primary">*</span>
                 </label>
                 <input
                   type="password"
@@ -287,11 +287,11 @@ export default function RegisterPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Sending...
+                    Enviando...
                   </>
                 ) : (
                   <>
-                    Continue
+                    Continuar
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
@@ -307,9 +307,9 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold mb-2">Check your email</h2>
+                <h2 className="text-xl font-semibold mb-2">Verifique seu e-mail</h2>
                 <p className="text-muted text-sm">
-                  We sent a 6-digit code to<br />
+                  Enviamos um código de 6 dígitos para<br />
                   <span className="text-foreground font-medium">{formData.email}</span>
                 </p>
               </div>
@@ -331,7 +331,7 @@ export default function RegisterPage() {
               </div>
 
               <p className="text-center text-xs text-muted">
-                Code expires in 5 minutes
+                O código expira em 5 minutos
               </p>
 
               {error && (
@@ -351,10 +351,10 @@ export default function RegisterPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Verifying...
+                    Verificando...
                   </>
                 ) : (
-                  "Verify & Create Account"
+                  "Verificar e Criar Conta"
                 )}
               </button>
 
@@ -367,7 +367,7 @@ export default function RegisterPage() {
                 }}
                 className="w-full py-2 text-muted hover:text-foreground text-sm transition-colors"
               >
-                ← Back to registration
+                ← Voltar ao cadastro
               </button>
             </form>
           )}
@@ -375,9 +375,9 @@ export default function RegisterPage() {
           {/* Footer */}
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-sm text-muted">
-              Already have an account?{" "}
+              Já tem uma conta?{" "}
               <Link href="/login" className="text-primary hover:text-primary-hover font-medium transition-colors">
-                Sign in
+                Entrar
               </Link>
             </p>
           </div>
@@ -385,10 +385,10 @@ export default function RegisterPage() {
 
         {/* Terms */}
         <p className="text-center text-xs text-muted mt-6">
-          By registering, you agree to our{" "}
-          <Link href="/terms" className="underline hover:text-foreground transition-colors">Terms of Service</Link>
-          {" "}and{" "}
-          <Link href="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</Link>
+          Ao se cadastrar, você concorda com nossos{" "}
+          <Link href="/terms" className="underline hover:text-foreground transition-colors">Termos de Serviço</Link>
+          {" "}e{" "}
+          <Link href="/privacy" className="underline hover:text-foreground transition-colors">Política de Privacidade</Link>
         </p>
       </div>
     </div>
@@ -419,4 +419,3 @@ function BackgroundEffects() {
     </div>
   );
 }
-

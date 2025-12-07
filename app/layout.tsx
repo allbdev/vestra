@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finance - Take Control of Your Money",
-  description: "A personal finance management app to track expenses, budgets, and investments.",
+  title: "Vestra - Controle suas finanças",
+  description: "Aplicativo de gestão financeira pessoal para controlar despesas, orçamentos e investimentos.",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

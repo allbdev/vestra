@@ -8,23 +8,23 @@ export async function sendConfirmationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Finance App <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM || "Vestra <onboarding@resend.dev>",
       to: email,
-      subject: "Confirm your email - Finance App",
+      subject: "Confirme seu e-mail - Vestra",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; text-align: center;">Welcome to Finance App!</h1>
+          <h1 style="color: #333; text-align: center;">Bem-vindo ao Vestra!</h1>
           <p style="color: #666; font-size: 16px;">
-            Thank you for registering. Please use the following confirmation code to complete your registration:
+            Obrigado por se cadastrar. Use o código de confirmação abaixo para concluir seu cadastro:
           </p>
           <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #333;">${code}</span>
           </div>
           <p style="color: #999; font-size: 14px; text-align: center;">
-            This code will expire in 5 minutes.
+            Este código expira em 5 minutos.
           </p>
           <p style="color: #999; font-size: 12px; text-align: center; margin-top: 40px;">
-            If you didn't request this code, please ignore this email.
+            Se você não solicitou este código, ignore este e-mail.
           </p>
         </div>
       `,
@@ -48,4 +48,3 @@ export async function sendConfirmationEmail(
 export function generateConfirmationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-

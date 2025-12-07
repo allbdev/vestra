@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!email || !password || !password_confirmation) {
       return NextResponse.json(
-        { error: "Email, password, and password confirmation are required" },
+        { error: "E-mail, senha e confirmação de senha são obrigatórios" },
         { status: 400 }
       );
     }
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: "Invalid email format" },
+        { error: "Formato de e-mail inválido" },
         { status: 400 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Check if passwords match
     if (password !== password_confirmation) {
       return NextResponse.json(
-        { error: "Passwords do not match" },
+        { error: "As senhas não coincidem" },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Validate password strength (at least 8 characters)
     if (password.length < 8) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        { error: "A senha deve ter pelo menos 8 caracteres" },
         { status: 400 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Email is already registered" },
+        { error: "Este e-mail já está cadastrado" },
         { status: 409 }
       );
     }
@@ -79,11 +79,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Store pending user data in a temporary way
-    // We'll store the hashed password in a separate pending_users approach
-    // For simplicity, we'll include it in the confirmation flow
-    // Let's store it alongside the confirmation code
-
     // Send confirmation email
     const emailResult = await sendConfirmationEmail(email, code);
 
@@ -94,25 +89,12 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: "Failed to send confirmation email. Please try again." },
+        { error: "Falha ao enviar e-mail de confirmação. Tente novamente." },
         { status: 500 }
       );
     }
 
-    // Store pending registration data (we need to save name and hashed password)
-    // Update the confirmation code record or use a separate mechanism
-    // For now, we'll handle this by requiring the user to re-enter during confirmation
-    // OR we store it in the session/temp storage
-
-    // Better approach: Store pending user data
-    // Let's update the schema or use a workaround
-    // For simplicity, we'll store it in memory or require re-entry
-
-    // Actually, let's create a proper flow by storing pending data
-    // We'll use a simple approach: store in the confirmation code table with extra fields
-    // But our current schema doesn't have those fields, so let's use a workaround
-
-    // Store in global memory (for demo - in production use Redis or DB)
+    // Store pending registration data in global memory (for demo - in production use Redis or DB)
     // @ts-expect-error - using global for demo purposes
     if (!global.pendingRegistrations) {
       // @ts-expect-error - using global for demo purposes
@@ -128,16 +110,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message:
-          "Confirmation email sent! Please check your inbox and enter the 6-digit code to complete registration.",
+          "E-mail de confirmação enviado! Verifique sua caixa de entrada e insira o código de 6 dígitos para concluir o cadastro.",
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "Ocorreu um erro inesperado" },
       { status: 500 }
     );
   }
 }
-

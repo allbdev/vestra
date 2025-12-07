@@ -1,11 +1,11 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: finance_mysql
+    container_name: vestra_mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: finance
+      MYSQL_DATABASE: vestra
     ports:
       - "3306:3306"
     volumes:

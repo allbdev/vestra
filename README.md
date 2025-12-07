@@ -1,36 +1,188 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vestra
 
-## Getting Started
+Aplicativo de gestão financeira pessoal para controlar despesas, orçamentos e investimentos.
 
-First, run the development server:
+## 🚀 Tecnologias
+
+- **Next.js 16** - Framework React com App Router
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS 4** - Estilização
+- **Prisma 7** - ORM para banco de dados
+- **MySQL 8** - Banco de dados relacional
+- **Resend** - Envio de e-mails transacionais
+
+## 📋 Pré-requisitos
+
+- Node.js 20+
+- Docker e Docker Compose
+- Conta no [Resend](https://resend.com) (para envio de e-mails)
+
+## 🛠️ Instalação
+
+### 1. Clone o repositório
+
+```bash
+git clone <repository-url>
+cd finance
+```
+
+### 2. Instale as dependências
+
+```bash
+npm install
+```
+
+### 3. Configure as variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` com suas configurações:
+
+```env
+# Database
+DATABASE_HOST="localhost"
+DATABASE_PORT=3306
+DATABASE_USER="root"
+DATABASE_PASSWORD="password"
+DATABASE_NAME="vestra"
+
+# Email (Resend)
+RESEND_API_KEY="re_sua_api_key"
+EMAIL_FROM="Vestra <seu-email@seudominio.com>"
+```
+
+### 4. Inicie o banco de dados
+
+```bash
+docker compose up -d
+```
+
+### 5. Execute as migrations
+
+```bash
+npm run db:migrate
+```
+
+### 6. Gere o cliente Prisma
+
+```bash
+npm run db:generate
+```
+
+### 7. Inicie o servidor de desenvolvimento
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Scripts Disponíveis
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Inicia o servidor de desenvolvimento |
+| `npm run build` | Gera build de produção |
+| `npm run start` | Inicia o servidor de produção |
+| `npm run lint` | Executa o linter |
+| `npm run db:generate` | Gera o cliente Prisma |
+| `npm run db:migrate` | Executa migrations em desenvolvimento |
+| `npm run db:migrate:deploy` | Executa migrations em produção |
+| `npm run db:push` | Sincroniza schema com o banco (sem migration) |
+| `npm run db:studio` | Abre o Prisma Studio (GUI do banco) |
 
-## Learn More
+## 🐳 Docker
 
-To learn more about Next.js, take a look at the following resources:
+### Iniciar o banco de dados
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker compose up -d
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Parar o banco de dados
 
-## Deploy on Vercel
+```bash
+docker compose down
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Ver logs do MySQL
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose logs -f mysql
+```
+
+### Acessar o MySQL via CLI
+
+```bash
+docker exec -it vestra_mysql mysql -u root -ppassword vestra
+```
+
+## 🗄️ Prisma
+
+### Criar uma nova migration
+
+```bash
+npx prisma migrate dev --name nome_da_migration
+```
+
+### Visualizar o banco de dados
+
+```bash
+npm run db:studio
+```
+
+### Resetar o banco de dados
+
+```bash
+npx prisma migrate reset
+```
+
+### Verificar status das migrations
+
+```bash
+npx prisma migrate status
+```
+
+## 📁 Estrutura do Projeto
+
+```
+├── app/
+│   ├── (auth)/              # Rotas de autenticação
+│   │   └── register/        # Página de cadastro
+│   ├── api/                 # API Routes
+│   │   └── auth/
+│   │       ├── register/    # POST /api/auth/register
+│   │       └── confirm/     # POST /api/auth/confirm
+│   ├── generated/           # Cliente Prisma gerado
+│   ├── lib/                 # Utilitários
+│   │   ├── db.ts           # Conexão com banco de dados
+│   │   └── email.ts        # Serviço de e-mail
+│   ├── globals.css         # Estilos globais
+│   ├── layout.tsx          # Layout principal
+│   └── page.tsx            # Página inicial
+├── prisma/
+│   ├── migrations/         # Migrations do banco
+│   └── schema.prisma       # Schema do Prisma
+├── docker-compose.yml      # Configuração Docker
+└── .env.example           # Exemplo de variáveis de ambiente
+```
+
+## 🔐 Funcionalidades
+
+### Autenticação
+
+- [x] Cadastro de usuário com confirmação por e-mail
+- [x] Código de confirmação com expiração de 5 minutos
+- [ ] Login
+- [ ] Recuperação de senha
+- [ ] Logout
+
+### Finanças (em desenvolvimento)
+
+- [ ] Dashboard
+- [ ] Cadastro de transações
+- [ ] Categorias de despesas
+- [ ] Orçamentos mensais
+- [ ] Relatórios

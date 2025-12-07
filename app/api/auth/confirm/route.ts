@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!email || !confirmation_code) {
       return NextResponse.json(
-        { error: "Email and confirmation code are required" },
+        { error: "E-mail e código de confirmação são obrigatórios" },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     if (!storedCode) {
       return NextResponse.json(
-        { error: "Invalid confirmation code" },
+        { error: "Código de confirmação inválido" },
         { status: 400 }
       );
     }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Confirmation code has expired. Please request a new code by registering again.",
+            "O código de confirmação expirou. Faça o cadastro novamente para receber um novo código.",
         },
         { status: 410 }
       );
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Registration data not found. Please start the registration process again.",
+            "Dados do cadastro não encontrados. Inicie o processo de cadastro novamente.",
         },
         { status: 400 }
       );
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       global.pendingRegistrations?.delete(normalizedEmail);
 
       return NextResponse.json(
-        { error: "Email is already registered" },
+        { error: "Este e-mail já está cadastrado" },
         { status: 409 }
       );
     }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Email confirmed successfully! Your account has been created.",
+        message: "E-mail confirmado com sucesso! Sua conta foi criada.",
         user: {
           id: user.id,
           name: user.name,
@@ -123,9 +123,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Confirmation error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "Ocorreu um erro inesperado" },
       { status: 500 }
     );
   }
 }
-
