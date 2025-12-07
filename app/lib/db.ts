@@ -12,7 +12,7 @@ function createPrismaClient() {
     port: parseInt(process.env.DATABASE_PORT || "3306"),
     user: process.env.DATABASE_USER || "root",
     password: process.env.DATABASE_PASSWORD || "password",
-    database: process.env.DATABASE_NAME || "finance",
+    database: process.env.DATABASE_NAME || "vestra",
     connectionLimit: 5,
   });
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Button, Input, CodeInput, Alert } from "@/app/components/ui";
 
 type Step = "register" | "confirm";
 
@@ -24,8 +25,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,36 +56,6 @@ export default function RegisterPage() {
       setError("Erro de conexão. Tente novamente.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCodeChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      // Handle paste
-      const digits = value.replace(/\D/g, "").slice(0, 6).split("");
-      const newCode = [...confirmationCode];
-      digits.forEach((digit, i) => {
-        if (index + i < 6) {
-          newCode[index + i] = digit;
-        }
-      });
-      setConfirmationCode(newCode);
-      const nextIndex = Math.min(index + digits.length, 5);
-      codeInputRefs.current[nextIndex]?.focus();
-    } else {
-      const newCode = [...confirmationCode];
-      newCode[index] = value.replace(/\D/g, "");
-      setConfirmationCode(newCode);
-      if (value && index < 5) {
-        codeInputRefs.current[index + 1]?.focus();
-      }
-    }
-    setError("");
-  };
-
-  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !confirmationCode[index] && index > 0) {
-      codeInputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -129,7 +98,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (step === "confirm") {
-      codeInputRefs.current[0]?.focus();
+      setError("");
     }
   }, [step]);
 
@@ -150,7 +119,7 @@ export default function RegisterPage() {
               <p className="text-muted mb-6">Sua conta foi criada com sucesso. Agora você pode entrar.</p>
               <Link
                 href="/login"
-                className="inline-block w-full py-3 px-4 bg-primary hover:bg-primary-hover text-background font-semibold rounded-xl transition-all duration-200"
+                className="inline-flex w-full items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary-hover text-background font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-primary/20"
               >
                 Entrar
               </Link>
@@ -206,90 +175,49 @@ export default function RegisterPage() {
 
           {step === "register" ? (
             <form onSubmit={handleRegisterSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-muted mb-2">
-                  Nome Completo
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="João Silva"
-                />
-              </div>
+              <Input
+                label="Nome Completo"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="João Silva"
+              />
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-muted mb-2">
-                  E-mail <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="joao@exemplo.com"
-                />
-              </div>
+              <Input
+                label="E-mail"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="joao@exemplo.com"
+                required
+              />
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-muted mb-2">
-                  Senha <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="••••••••"
-                />
-                <p className="text-xs text-muted mt-1.5">Mínimo de 8 caracteres</p>
-              </div>
+              <Input
+                label="Senha"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="••••••••"
+                hint="Mínimo de 8 caracteres"
+                required
+              />
 
-              <div>
-                <label htmlFor="password_confirmation" className="block text-sm font-medium text-muted mb-2">
-                  Confirmar Senha <span className="text-primary">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  value={formData.password_confirmation}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 placeholder:text-muted/50"
-                  placeholder="••••••••"
-                />
-              </div>
+              <Input
+                label="Confirmar Senha"
+                type="password"
+                name="password_confirmation"
+                value={formData.password_confirmation}
+                onChange={handleInputChange}
+                placeholder="••••••••"
+                required
+              />
 
-              {error && (
-                <div className="p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm animate-fade-in">
-                  {error}
-                </div>
-              )}
+              {error && <Alert>{error}</Alert>}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 px-4 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-background font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Enviando...
-                  </>
-                ) : (
+              <Button type="submit" loading={loading} fullWidth>
+                {loading ? "Enviando..." : (
                   <>
                     Continuar
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -297,7 +225,7 @@ export default function RegisterPage() {
                     </svg>
                   </>
                 )}
-              </button>
+              </Button>
             </form>
           ) : (
             <form onSubmit={handleConfirmSubmit} className="space-y-6">
@@ -314,61 +242,34 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              <div className="flex justify-center gap-2">
-                {confirmationCode.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => { codeInputRefs.current[index] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-xl font-bold bg-background border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
-                  />
-                ))}
-              </div>
+              <CodeInput
+                value={confirmationCode}
+                onChange={setConfirmationCode}
+                disabled={loading}
+              />
 
               <p className="text-center text-xs text-muted">
                 O código expira em 5 minutos
               </p>
 
-              {error && (
-                <div className="p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm text-center animate-fade-in">
-                  {error}
-                </div>
-              )}
+              {error && <Alert className="text-center">{error}</Alert>}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 px-4 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-background font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Verificando...
-                  </>
-                ) : (
-                  "Verificar e Criar Conta"
-                )}
-              </button>
+              <Button type="submit" loading={loading} fullWidth>
+                {loading ? "Verificando..." : "Verificar e Criar Conta"}
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                fullWidth
                 onClick={() => {
                   setStep("register");
                   setConfirmationCode(["", "", "", "", "", ""]);
                   setError("");
                 }}
-                className="w-full py-2 text-muted hover:text-foreground text-sm transition-colors"
               >
                 ← Voltar ao cadastro
-              </button>
+              </Button>
             </form>
           )}
 
