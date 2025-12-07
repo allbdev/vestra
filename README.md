@@ -9,6 +9,8 @@ Aplicativo de gestão financeira pessoal para controlar despesas, orçamentos e 
 - **Tailwind CSS 4** - Estilização
 - **Prisma 7** - ORM para banco de dados
 - **MySQL 8** - Banco de dados relacional
+- **React Hook Form** - Gerenciamento de formulários
+- **Yup** - Validação de schemas
 - **Resend** - Envio de e-mails transacionais
 
 ## 📋 Pré-requisitos
@@ -155,6 +157,13 @@ npx prisma migrate status
 │   │   └── auth/
 │   │       ├── register/    # POST /api/auth/register
 │   │       └── confirm/     # POST /api/auth/confirm
+│   ├── components/          # Componentes reutilizáveis
+│   │   └── ui/
+│   │       ├── Alert.tsx    # Componente de alerta
+│   │       ├── Button.tsx   # Componente de botão
+│   │       ├── CodeInput.tsx # Input para código de verificação
+│   │       ├── Input.tsx    # Componente de input
+│   │       └── index.ts     # Exportações
 │   ├── generated/           # Cliente Prisma gerado
 │   ├── lib/                 # Utilitários
 │   │   ├── db.ts           # Conexão com banco de dados
@@ -169,12 +178,70 @@ npx prisma migrate status
 └── .env.example           # Exemplo de variáveis de ambiente
 ```
 
+## 🧩 Componentes UI
+
+Componentes reutilizáveis localizados em `app/components/ui/`:
+
+### Button
+
+```tsx
+import { Button } from "@/app/components/ui";
+
+<Button variant="primary" size="md" loading={false} fullWidth>
+  Enviar
+</Button>
+```
+
+**Props:** `variant` (primary | secondary | ghost), `size` (sm | md | lg), `loading`, `fullWidth`
+
+### Input
+
+```tsx
+import { Input } from "@/app/components/ui";
+
+<Input
+  label="E-mail"
+  type="email"
+  placeholder="joao@exemplo.com"
+  hint="Texto de ajuda"
+  error="Mensagem de erro"
+  required
+  {...register("email")}
+/>
+```
+
+**Props:** `label`, `hint`, `error`, `required`, + todos os props nativos de input
+
+### CodeInput
+
+```tsx
+import { CodeInput } from "@/app/components/ui";
+
+<CodeInput
+  value={["", "", "", "", "", ""]}
+  onChange={setCode}
+  length={6}
+  disabled={false}
+/>
+```
+
+### Alert
+
+```tsx
+import { Alert } from "@/app/components/ui";
+
+<Alert variant="error">Mensagem de erro</Alert>
+```
+
+**Variants:** `error`, `success`, `warning`, `info`
+
 ## 🔐 Funcionalidades
 
 ### Autenticação
 
 - [x] Cadastro de usuário com confirmação por e-mail
 - [x] Código de confirmação com expiração de 5 minutos
+- [x] Validação de formulários com React Hook Form + Yup
 - [ ] Login
 - [ ] Recuperação de senha
 - [ ] Logout

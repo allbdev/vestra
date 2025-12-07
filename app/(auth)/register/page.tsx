@@ -2,38 +2,29 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, CodeInput, Alert } from "@/app/components/ui";
-
-type Step = "register" | "confirm";
-
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}
+import { Step, RegisterFormData, registerSchema } from "./domain";
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>("register");
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
   const [confirmationCode, setConfirmationCode] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setError("");
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<RegisterFormData>({
+    resolver: yupResolver(registerSchema),
+    mode: "onBlur",
+  });
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onRegisterSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     setError("");
 
@@ -41,13 +32,13 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Algo deu errado");
+        setError(result.error || "Algo deu errado");
         return;
       }
 
@@ -76,7 +67,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: formData.email,
+          email: getValues("email"),
           confirmation_code: code,
         }),
       });
@@ -174,44 +165,40 @@ export default function RegisterPage() {
           </div>
 
           {step === "register" ? (
-            <form onSubmit={handleRegisterSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit(onRegisterSubmit)} className="space-y-5">
               <Input
                 label="Nome Completo"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
                 placeholder="João Silva"
+                error={errors.name?.message}
+                {...register("name")}
               />
 
               <Input
                 label="E-mail"
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
                 placeholder="joao@exemplo.com"
+                error={errors.email?.message}
                 required
+                {...register("email")}
               />
 
               <Input
                 label="Senha"
                 type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
                 placeholder="••••••••"
-                hint="Mínimo de 8 caracteres"
+                hint={!errors.password ? "Mínimo de 8 caracteres" : undefined}
+                error={errors.password?.message}
                 required
+                {...register("password")}
               />
 
               <Input
                 label="Confirmar Senha"
                 type="password"
-                name="password_confirmation"
-                value={formData.password_confirmation}
-                onChange={handleInputChange}
                 placeholder="••••••••"
+                error={errors.password_confirmation?.message}
                 required
+                {...register("password_confirmation")}
               />
 
               {error && <Alert>{error}</Alert>}
@@ -238,7 +225,7 @@ export default function RegisterPage() {
                 <h2 className="text-xl font-semibold mb-2">Verifique seu e-mail</h2>
                 <p className="text-muted text-sm">
                   Enviamos um código de 6 dígitos para<br />
-                  <span className="text-foreground font-medium">{formData.email}</span>
+                  <span className="text-foreground font-medium">{getValues("email")}</span>
                 </p>
               </div>
 
