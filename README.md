@@ -158,7 +158,8 @@ npx prisma migrate status
 │   │   └── auth/
 │   │       ├── register/    # POST /api/auth/register
 │   │       ├── confirm/     # POST /api/auth/confirm
-│   │       └── login/       # POST /api/auth/login
+│   │       ├── login/       # POST /api/auth/login
+│   │       └── user-info/   # GET /api/auth/user-info
 │   ├── components/          # Componentes reutilizáveis
 │   │   ├── ui/
 │   │   │   ├── Alert.tsx    # Componente de alerta
@@ -168,7 +169,10 @@ npx prisma migrate status
 │   │   │   └── index.ts     # Exportações
 │   │   ├── Header.tsx       # Cabeçalho com navegação
 │   │   └── BackgroundEffects.tsx # Efeitos de fundo animados
+│   ├── contexts/            # React Contexts
+│   │   └── AuthContext.tsx # Context de autenticação
 │   ├── generated/           # Cliente Prisma gerado
+│   ├── dashboard/          # Página de dashboard
 │   ├── lib/                 # Utilitários
 │   │   ├── db.ts           # Conexão com banco de dados
 │   │   ├── email.ts        # Serviço de e-mail

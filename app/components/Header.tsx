@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Header() {
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -43,9 +45,15 @@ export function Header() {
             <a href="#sobre" className="text-muted hover:text-foreground transition-colors">
               Sobre
             </a>
-            <Link href="/login" className="text-muted hover:text-foreground transition-colors">
-              Entrar
-            </Link>
+            {user ? (
+              <Link href="/dashboard" className="text-muted hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/login" className="text-muted hover:text-foreground transition-colors">
+                Entrar
+              </Link>
+            )}
           </nav>
 
           {/* CTA Button */}

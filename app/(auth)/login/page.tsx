@@ -8,9 +8,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, Alert } from "@/app/components/ui";
 import { LoginFormData, loginSchema } from "./domain";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -41,12 +43,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Store session token
-      if (result.sessionToken) {
-        localStorage.setItem("sessionToken", result.sessionToken);
-      }
+      // Use auth context to login
+      await login(result.sessionToken, result.user);
 
-      // Redirect to dashboard or home
+      // Redirect to dashboard
       router.push("/dashboard");
     } catch {
       setError("Erro de conexão. Tente novamente.");
