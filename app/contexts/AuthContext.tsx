@@ -10,13 +10,19 @@ interface User {
   email: string;
   createdAt: string;
   updatedAt: string;
+  workspaces: Workspace[];
+}
+
+interface Workspace {
+  id: string;
+  name: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (sessionToken: string, userData?: Partial<User>) => Promise<void>;
+  login: (sessionToken: string, userData?: Partial<User>, workspaces?: Workspace[]) => Promise<void>;
   logout: () => void;
   fetchUserInfo: () => Promise<void>;
 }
@@ -56,7 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
-      setUser(data.user);
+      setUser({
+        ...data.user,
+        workspaces: data.workspaces || [],
+      });
     } catch (error) {
       console.error("Error fetching user info:", error);
       setUser(null);
@@ -65,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (sessionToken: string, userData?: Partial<User>) => {
+  const login = async (sessionToken: string, userData?: Partial<User>, workspaces?: Workspace[]) => {
     setStorageItem("sessionToken", sessionToken);
     
     // If userData is provided, use it temporarily until we fetch from API
@@ -76,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: userData.email!,
         createdAt: userData.createdAt || new Date().toISOString(),
         updatedAt: userData.updatedAt || new Date().toISOString(),
+        workspaces: workspaces || [],
       });
     }
     

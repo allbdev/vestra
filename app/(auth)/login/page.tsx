@@ -45,7 +45,7 @@ export default function LoginPage() {
       }
 
       // Use auth context to login
-      await login(result.sessionToken, result.user);
+      await login(result.sessionToken, result.user, result.workspaces);
 
       // Check for saved workspace in localStorage
       const savedWorkspaceId = getStorageItem("selectedWorkspaceId");

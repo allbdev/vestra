@@ -64,6 +64,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const workspaces = await db.workspaceUser.findMany({
+      where: {
+        userId: session.user.id,
+      },
+      include: {
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
     // Return user information
     return NextResponse.json(
       {
@@ -74,6 +88,7 @@ export async function GET(request: NextRequest) {
           createdAt: session.user.createdAt,
           updatedAt: session.user.updatedAt,
         },
+        workspaces,
       },
       { status: 200 }
     );

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { getStorageItem, setStorageItem, removeStorageItem } from "../lib/storage";
 import { useRouter } from "next/navigation";
+import { useAuth } from "./AuthContext";
 
 interface Workspace {
   id: string;
@@ -37,14 +38,19 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { user } = useAuth();
 
   // Load selected workspace from localStorage on mount
   useEffect(() => {
     const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
-    if (savedWorkspaceId) {
+    console.log(user);
+    const amIOnWorkspace = user?.workspaces.some((workspace) => workspace.id === savedWorkspaceId);
+    if (savedWorkspaceId && amIOnWorkspace) {
       setSelectedWorkspaceIdState(savedWorkspaceId);
+    } else {
+      removeStorageItem('selectedWorkspaceId');
     }
-  }, []);
+  }, [user?.workspaces]);
 
   const setSelectedWorkspaceId = (workspaceId: string | null) => {
     setSelectedWorkspaceIdState(workspaceId);

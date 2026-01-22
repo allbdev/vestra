@@ -92,6 +92,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const workspaces = await db.workspaceUser.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
     // Return user data and session token
     return NextResponse.json(
       {
@@ -102,6 +116,7 @@ export async function POST(request: NextRequest) {
           email: user.email,
         },
         sessionToken,
+        workspaces,
       },
       { status: 200 }
     );
