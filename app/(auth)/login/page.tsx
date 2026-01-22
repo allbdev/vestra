@@ -1,65 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, Alert } from "@/app/components/ui";
-import { LoginFormData, loginSchema } from "./domain";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
-import { useAuth } from "@/app/contexts/AuthContext";
-import { getStorageItem } from "@/app/lib/storage";
+import { login } from "@/app/actions/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: yupResolver(loginSchema),
-    mode: "onBlur",
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Algo deu errado");
-        return;
-      }
-
-      // Use auth context to login
-      await login(result.sessionToken, result.user, result.workspaces);
-
-      // Check for saved workspace in localStorage
-      const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
-      if (savedWorkspaceId) {
-        router.push(`/workspace/${savedWorkspaceId}/dashboard`);
-      } else {
-        router.push("/workspace");
-      }
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [state, action, pending] = useActionState(login, undefined);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -79,23 +27,23 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl shadow-black/20 animate-slide-up">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form action={action} className="space-y-5">
             <Input
               label="E-mail"
               type="email"
+              name="email"
               placeholder="joao@exemplo.com"
-              error={errors.email?.message}
+              error={state?.errors?.email?.[0]}
               required
-              {...register("email")}
             />
 
             <Input
               label="Senha"
               type="password"
+              name="password"
               placeholder="••••••••"
-              error={errors.password?.message}
+              error={state?.errors?.password?.[0]}
               required
-              {...register("password")}
             />
 
             <div className="flex items-center justify-between">
@@ -114,10 +62,12 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {error && <Alert>{error}</Alert>}
+            {state?.errors?._form && (
+              <Alert variant="error">{state.errors._form[0]}</Alert>
+            )}
 
-            <Button type="submit" loading={loading} fullWidth>
-              {loading ? "Entrando..." : "Entrar"}
+            <Button type="submit" loading={pending} fullWidth disabled={pending}>
+              {pending ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 

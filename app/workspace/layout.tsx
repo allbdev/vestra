@@ -1,41 +1,27 @@
-"use client";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { getSessionToken } from "@/app/lib/session";
 
-import { useAuth } from "@/app/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-export default function WorkspaceLayout({
+export default async function WorkspaceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  // Check if this is an invite route (set by proxy)
+  const headersList = await headers();
+  const isInviteRoute = headersList.get("x-invite-route") === "true";
 
-  const isInvitePage = window && window.location.pathname.includes('/invite');
-
-  useEffect(() => {
-    if (!loading && !user) {
-      if (isInvitePage) {
-        return;
-      }
-      router.push("/login");
-    }
-  }, [loading, user, router]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted">Carregando...</p>
-        </div>
-      </div>
-    );
+  // Skip authentication check for invite routes
+  // Invite routes will handle their own authentication flow
+  if (isInviteRoute) {
+    return <>{children}</>;
   }
 
-  if (!user && !isInvitePage) {
-    return null;
+  // For all other workspace routes, check authentication
+  const sessionToken = await getSessionToken();
+  
+  if (!sessionToken) {
+    redirect("/login");
   }
 
   return <>{children}</>;

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redirect } from "next/navigation";
 import { db } from "@/app/lib/db";
 import { generateSessionToken, getTokenExpiry } from "@/app/lib/auth";
+import { storageKeys } from "@/app/lib/consts";
 
-// GET /api/workspaces/[id]/invites/[userId] - Get invite details, create session, set cookie, and redirect to page
+const SESSION_COOKIE_NAME = storageKeys.sessionToken;
+const TOKEN_EXPIRY_DAYS = 30;
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string }> }
+  { params }: { params: Promise<{ workspaceId: string; userId: string }> }
 ) {
-  try {
-    const { id: workspaceId, userId } = await params;
+  const { workspaceId, userId } = await params;
 
+  try {
     // Find the invite
     const invite = await db.workspaceInvite.findFirst({
       where: {
@@ -20,21 +22,14 @@ export async function GET(
       },
       include: {
         workspace: {
-          include: {
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
+          select: {
+            id: true,
+            deletedAt: true,
           },
         },
         user: {
           select: {
             id: true,
-            name: true,
-            email: true,
             deletedAt: true,
           },
         },
@@ -55,29 +50,7 @@ export async function GET(
       return NextResponse.redirect(new URL("/404", request.url));
     }
 
-    // Check if user is already part of the workspace
-    const existingWorkspaceUser = await db.workspaceUser.findFirst({
-      where: {
-        workspaceId,
-        userId,
-        deletedAt: null,
-      },
-    });
-
-    if (existingWorkspaceUser) {
-      // Update invite status to accepted since user is already in workspace
-      await db.workspaceInvite.update({
-        where: { id: invite.id },
-        data: { status: "accepted" },
-      });
-
-      const response = NextResponse.redirect(
-        new URL(`/workspace/${workspaceId}/dashboard`, request.url)
-      );
-      return response;
-    }
-
-    // Create a session for the user so they can view the invite page
+    // Create a session for the user
     const sessionToken = generateSessionToken();
     const expiresAt = getTokenExpiry();
 
@@ -89,23 +62,26 @@ export async function GET(
       },
     });
 
-    // Set session token in cookie and redirect to the page
+    // Create redirect response
     const response = NextResponse.redirect(
       new URL(`/workspace/${workspaceId}/invite/${userId}`, request.url)
     );
 
-    response.cookies.set("sessionToken", sessionToken, {
+    // Set the cookie directly on the response
+    const cookieExpiry = new Date();
+    cookieExpiry.setDate(cookieExpiry.getDate() + TOKEN_EXPIRY_DAYS);
+
+    response.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      expires: expiresAt,
+      expires: cookieExpiry,
       path: "/",
     });
 
     return response;
-  } catch (error: any) {
-    console.error("Get invite error:", error);
+  } catch (error) {
+    console.error("Create invite session error:", error);
     return NextResponse.redirect(new URL("/404", request.url));
   }
 }
-

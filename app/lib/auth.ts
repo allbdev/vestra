@@ -23,6 +23,7 @@ export interface AuthenticatedUser {
 /**
  * Authenticates a request and returns the user if valid
  * Returns null if authentication fails
+ * This is for use in Route Handlers (API routes)
  */
 export async function authenticateRequest(
   request: NextRequest

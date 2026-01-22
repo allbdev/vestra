@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, Alert } from "./ui";
-import { getStorageItem } from "@/app/lib/storage";
+import { inviteUser } from "@/app/actions/workspace";
+import { useRouter } from "next/navigation";
 
 interface InviteUserModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function InviteUserModal({
   workspaceId,
   onInviteSent,
 }: InviteUserModalProps) {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -41,31 +43,19 @@ export function InviteUserModal({
     setError("");
 
     try {
-      const sessionToken = getStorageItem("sessionToken");
-      if (!sessionToken) {
-        setError("Sessão expirada. Faça login novamente.");
-        return;
-      }
+      const result = await inviteUser(workspaceId, data.email.trim().toLowerCase());
 
-      const response = await fetch(`/api/workspaces/${workspaceId}/invites`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
-        },
-        body: JSON.stringify({ email: data.email.trim().toLowerCase() }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (!result.success) {
         setError(result.error || "Erro ao enviar convite. Tente novamente.");
+        setLoading(false);
         return;
       }
 
       reset();
       onInviteSent();
       onClose();
+      // Refresh the page to show updated data
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Erro ao enviar convite. Tente novamente.");
     } finally {

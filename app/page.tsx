@@ -2,12 +2,15 @@ import Link from "next/link";
 import { Header } from "./components/Header";
 import { BackgroundEffects } from "./components/BackgroundEffects";
 import { Button } from "./components/ui";
+import { verifySession } from "./lib/session";
 
-export default function Home() {
+export default async function Home() {
+  const user = await verifySession();
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <BackgroundEffects />
-      <Header />
+      <Header user={user} />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">

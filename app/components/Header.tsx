@@ -1,13 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "./ui";
-import { useAuth } from "../contexts/AuthContext";
-import { getStorageItem } from "../lib/storage";
 
-export function Header() {
-  const { user } = useAuth();
+interface HeaderProps {
+  user?: {
+    id: string;
+    email: string;
+    name: string | null;
+  } | null;
+}
+
+export function Header({ user }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -18,13 +23,7 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const dashboardHref = useMemo(() => {
-    if (user) {
-      const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
-      return savedWorkspaceId ? `/workspace/${savedWorkspaceId}/dashboard` : "/workspace"
-    }
-    return "/workspace";
-  }, [user]);
+  const dashboardHref = user ? "/workspace" : "/workspace";
 
   return (
     <header

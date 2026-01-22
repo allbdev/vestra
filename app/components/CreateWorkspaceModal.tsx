@@ -1,55 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useActionState } from "react";
 import { Button, Input, Alert } from "./ui";
-import { useWorkspace } from "../contexts/WorkspaceContext";
+import { createWorkspace } from "../actions/workspace";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface CreateWorkspaceFormData {
-  name: string;
-}
-
 export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalProps) {
-  const { createWorkspace } = useWorkspace();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CreateWorkspaceFormData>({
-    mode: "onBlur",
-  });
+  const [state, action, pending] = useActionState(createWorkspace, undefined);
 
   if (!isOpen) return null;
 
-  const onSubmit = async (data: CreateWorkspaceFormData) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const workspace = await createWorkspace(data.name.trim());
-      if (workspace) {
-        reset();
-        onClose();
-      }
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar workspace. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCancel = () => {
-    reset();
-    setError("");
     onClose();
   };
 
@@ -82,38 +47,33 @@ export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalPr
           Crie um novo workspace para gerenciar suas finanças
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form action={action} className="space-y-4">
           <Input
             label="Nome do Workspace"
+            name="name"
             placeholder="Ex: Finanças da Família"
-            error={errors.name?.message}
+            error={state?.errors?.name?.[0]}
             required
             autoFocus
-            {...register("name", {
-              required: "Nome do workspace é obrigatório",
-              minLength: {
-                value: 2,
-                message: "Nome deve ter pelo menos 2 caracteres",
-              },
-              maxLength: {
-                value: 255,
-                message: "Nome deve ter no máximo 255 caracteres",
-              },
-            })}
           />
 
-          {error && <Alert variant="error">{error}</Alert>}
+          {state?.errors?.name && (
+            <Alert variant="error">{state.errors.name[0]}</Alert>
+          )}
+          {state?.errors?._form && (
+            <Alert variant="error">{state.errors._form[0]}</Alert>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
               variant="secondary"
               onClick={handleCancel}
-              disabled={loading}
+              disabled={pending}
             >
               Cancelar
             </Button>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={pending} disabled={pending}>
               Criar
             </Button>
           </div>

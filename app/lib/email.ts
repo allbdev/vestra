@@ -57,6 +57,7 @@ export async function sendWorkspaceInviteEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const appUrl = process.env.APP_URL || "http://localhost:3000";
+    // Direct link to invite page - session will be created automatically if needed
     const inviteUrl = `${appUrl}/workspace/${workspaceId}/invite/${userId}`;
 
     const { error } = await resend.emails.send({

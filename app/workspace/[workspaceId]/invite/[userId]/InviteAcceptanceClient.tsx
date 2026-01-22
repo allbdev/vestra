@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button, Alert } from "@/app/components/ui";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { acceptInvite, rejectInvite } from "@/app/actions/invite";
 
 interface InviteAcceptanceClientProps {
   invite: {
@@ -27,58 +26,32 @@ interface InviteAcceptanceClientProps {
       email: string;
     };
   };
-  sessionToken: string;
 }
 
 export function InviteAcceptanceClient({
   invite,
-  sessionToken,
 }: InviteAcceptanceClientProps) {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Update session token in storage and login (only once on mount)
-  useEffect(() => {
-    if (sessionToken) {
-      login(sessionToken, {
-        id: invite.user.id,
-        name: invite.user.name,
-        email: invite.user.email,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const handleAccept = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `/api/workspaces/${invite.workspaceId}/invites/${invite.userId}/accept`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Erro ao aceitar convite. Tente novamente.");
+      const result = await acceptInvite(invite.workspaceId, invite.userId);
+      
+      if (result.errors) {
+        setError(result.errors._form?.[0] || "Erro ao aceitar convite. Tente novamente.");
+        setLoading(false);
+      }
+      // If successful, redirect will happen in the Server Action
+    } catch (err: any) {
+      // Ignore redirect errors (they're expected)
+      if (err?.digest?.startsWith("NEXT_REDIRECT")) {
         return;
       }
-
-      // Redirect to workspace dashboard
-      router.push(`/workspace/${invite.workspaceId}/dashboard`);
-    } catch (err: any) {
       setError(err.message || "Erro ao aceitar convite. Tente novamente.");
-    } finally {
       setLoading(false);
     }
   };
@@ -88,29 +61,19 @@ export function InviteAcceptanceClient({
     setError("");
 
     try {
-      const response = await fetch(
-        `/api/workspaces/${invite.workspaceId}/invites/${invite.userId}/reject`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Erro ao recusar convite. Tente novamente.");
+      const result = await rejectInvite(invite.workspaceId, invite.userId);
+      
+      if (result.errors) {
+        setError(result.errors._form?.[0] || "Erro ao recusar convite. Tente novamente.");
+        setLoading(false);
+      }
+      // If successful, redirect will happen in the Server Action
+    } catch (err: any) {
+      // Ignore redirect errors (they're expected)
+      if (err?.digest?.startsWith("NEXT_REDIRECT")) {
         return;
       }
-
-      // Redirect to workspace list
-      router.push("/workspace");
-    } catch (err: any) {
       setError(err.message || "Erro ao recusar convite. Tente novamente.");
-    } finally {
       setLoading(false);
     }
   };

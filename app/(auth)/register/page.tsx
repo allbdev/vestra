@@ -1,98 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, CodeInput, Alert } from "@/app/components/ui";
-import { Step, RegisterFormData, registerSchema } from "./domain";
+import { Step } from "./domain";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
+import { register, confirm } from "@/app/actions/auth";
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>("register");
   const [confirmationCode, setConfirmationCode] = useState<string[]>(["", "", "", "", "", ""]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm<RegisterFormData>({
-    resolver: yupResolver(registerSchema),
-    mode: "onBlur",
-  });
+  const [registerState, registerAction, registerPending] = useActionState(register, undefined);
+  const [confirmState, confirmAction, confirmPending] = useActionState(confirm, undefined);
 
-  const onRegisterSubmit = async (data: RegisterFormData) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Algo deu errado");
-        return;
-      }
-
-      setStep("confirm");
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConfirmSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = confirmationCode.join("");
-    
-    if (code.length !== 6) {
-      setError("Digite o código completo de 6 dígitos");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/auth/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: getValues("email"),
-          confirmation_code: code,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Código de confirmação inválido");
-        return;
-      }
-
-      setSuccess(true);
-    } catch {
-      setError("Erro de conexão. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Move to confirm step when registration succeeds
   useEffect(() => {
-    if (step === "confirm") {
-      setError("");
+    if (registerState?.message && !registerState?.errors) {
+      setStep("confirm");
     }
-  }, [step]);
+  }, [registerState]);
+
+  // Show success when confirmation succeeds
+  useEffect(() => {
+    if (confirmState?.success) {
+      setSuccess(true);
+    }
+  }, [confirmState]);
 
   if (success) {
     return (
@@ -166,46 +103,49 @@ export default function RegisterPage() {
           </div>
 
           {step === "register" ? (
-            <form onSubmit={handleSubmit(onRegisterSubmit)} className="space-y-5">
+            <form action={registerAction} className="space-y-5">
               <Input
                 label="Nome Completo"
+                name="name"
                 placeholder="João Silva"
-                error={errors.name?.message}
-                {...register("name")}
+                error={registerState?.errors?.name?.[0]}
               />
 
               <Input
                 label="E-mail"
                 type="email"
+                name="email"
                 placeholder="joao@exemplo.com"
-                error={errors.email?.message}
+                error={registerState?.errors?.email?.[0]}
                 required
-                {...register("email")}
+                onChange={(e) => setEmail(e.target.value)}
               />
 
               <Input
                 label="Senha"
                 type="password"
+                name="password"
                 placeholder="••••••••"
-                hint={!errors.password ? "Mínimo de 8 caracteres" : undefined}
-                error={errors.password?.message}
+                hint={!registerState?.errors?.password ? "Mínimo de 8 caracteres" : undefined}
+                error={registerState?.errors?.password?.[0]}
                 required
-                {...register("password")}
               />
 
               <Input
                 label="Confirmar Senha"
                 type="password"
+                name="password_confirmation"
                 placeholder="••••••••"
-                error={errors.password_confirmation?.message}
+                error={registerState?.errors?.password_confirmation?.[0]}
                 required
-                {...register("password_confirmation")}
               />
 
-              {error && <Alert>{error}</Alert>}
+              {registerState?.errors?._form && (
+                <Alert variant="error">{registerState.errors._form[0]}</Alert>
+              )}
 
-              <Button type="submit" loading={loading} fullWidth>
-                {loading ? "Enviando..." : (
+              <Button type="submit" loading={registerPending} fullWidth disabled={registerPending}>
+                {registerPending ? "Enviando..." : (
                   <>
                     Continuar
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +156,9 @@ export default function RegisterPage() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleConfirmSubmit} className="space-y-6">
+            <form action={confirmAction} className="space-y-6">
+              <input type="hidden" name="email" value={email} />
+              <input type="hidden" name="confirmation_code" value={confirmationCode.join("")} />
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
                   <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,24 +168,29 @@ export default function RegisterPage() {
                 <h2 className="text-xl font-semibold mb-2">Verifique seu e-mail</h2>
                 <p className="text-muted text-sm">
                   Enviamos um código de 6 dígitos para<br />
-                  <span className="text-foreground font-medium">{getValues("email")}</span>
+                  <span className="text-foreground font-medium">{email}</span>
                 </p>
               </div>
 
               <CodeInput
                 value={confirmationCode}
                 onChange={setConfirmationCode}
-                disabled={loading}
+                disabled={confirmPending}
               />
 
               <p className="text-center text-xs text-muted">
                 O código expira em 5 minutos
               </p>
 
-              {error && <Alert className="text-center">{error}</Alert>}
+              {confirmState?.errors?._form && (
+                <Alert variant="error" className="text-center">{confirmState.errors._form[0]}</Alert>
+              )}
+              {confirmState?.errors?.confirmation_code && (
+                <Alert variant="error" className="text-center">{confirmState.errors.confirmation_code[0]}</Alert>
+              )}
 
-              <Button type="submit" loading={loading} fullWidth>
-                {loading ? "Verificando..." : "Verificar e Criar Conta"}
+              <Button type="submit" loading={confirmPending} fullWidth disabled={confirmPending}>
+                {confirmPending ? "Verificando..." : "Verificar e Criar Conta"}
               </Button>
 
               <Button
@@ -253,7 +200,6 @@ export default function RegisterPage() {
                 onClick={() => {
                   setStep("register");
                   setConfirmationCode(["", "", "", "", "", ""]);
-                  setError("");
                 }}
               >
                 ← Voltar ao cadastro

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/app/lib/db";
-import { generateSessionToken, getTokenExpiry } from "@/app/lib/auth";
+import { verifySession } from "@/app/lib/session";
 import { InviteAcceptanceClient } from "./InviteAcceptanceClient";
 
 interface PageProps {
@@ -9,6 +9,14 @@ interface PageProps {
 
 export default async function InvitePage({ params }: PageProps) {
   const { workspaceId, userId } = await params;
+
+  // Verify user is authenticated
+  const user = await verifySession();
+
+  // If no session, redirect to route handler to create one
+  if (!user) {
+    redirect(`/workspace/${workspaceId}/invite/${userId}/session`);
+  }
 
   // Find the invite
   const invite = await db.workspaceInvite.findFirst({
@@ -67,18 +75,6 @@ export default async function InvitePage({ params }: PageProps) {
     redirect(`/workspace/${workspaceId}/dashboard`);
   }
 
-  // Create a session for the user so they can view and interact with the invite page
-  const sessionToken = generateSessionToken();
-  const expiresAt = getTokenExpiry();
-
-  await db.session.create({
-    data: {
-      userId: invite.user.id,
-      token: sessionToken,
-      expiresAt,
-    },
-  });
-
   return (
     <InviteAcceptanceClient
       invite={{
@@ -94,7 +90,6 @@ export default async function InvitePage({ params }: PageProps) {
         },
         user: invite.user,
       }}
-      sessionToken={sessionToken}
     />
   );
 }
