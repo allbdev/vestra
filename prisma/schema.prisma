@@ -24,6 +24,7 @@ model User {
   sessions             Session[]
   ownedWorkspaces      Workspace[]           @relation("WorkspaceOwner")
   workspaceUsers       WorkspaceUser[]
+  workspaceInvites     WorkspaceInvite[]
   ownedCategories      Category[]
   ownedTransactionTemplates TransactionTemplate[]
   ownedTransactions    Transaction[]
@@ -40,6 +41,7 @@ model Workspace {
   deletedAt     DateTime?           @map("deleted_at")
   owner         User                @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   users         WorkspaceUser[]
+  invites       WorkspaceInvite[]
   categories    Category[]
   transactionTemplates TransactionTemplate[]
   transactions  Transaction[]
@@ -86,6 +88,22 @@ model Session {
   @@index([userId])
   @@index([token])
   @@map("sessions")
+}
+
+model WorkspaceInvite {
+  id          String    @id @default(uuid()) @db.VarChar(36)
+  workspaceId String    @map("workspace_id") @db.VarChar(36)
+  userId      String    @map("user_id") @db.VarChar(36)
+  status      String    @default("waiting") @db.VarChar(20) // 'waiting', 'accepted', 'rejected'
+  createdAt   DateTime  @default(now()) @map("created_at")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([status])
+  @@map("workspace_invites")
 }
 
 model Category {

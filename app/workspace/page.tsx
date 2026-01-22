@@ -14,13 +14,6 @@ export default function WorkspacePage() {
   const { workspaces, loading: workspacesLoading, selectedWorkspaceId, setSelectedWorkspaceId } = useWorkspace();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
-  }, [user, authLoading, router]);
-
   // Redirect to saved workspace if exists
   useEffect(() => {
     if (!authLoading && !workspacesLoading && selectedWorkspaceId) {
@@ -46,6 +39,11 @@ export default function WorkspacePage() {
   const handleWorkspaceClick = (workspaceId: string) => {
     setSelectedWorkspaceId(workspaceId);
     router.push(`/workspace/${workspaceId}/dashboard`);
+  };
+
+  const handleConfigClick = (e: React.MouseEvent, workspaceId: string) => {
+    e.stopPropagation();
+    router.push(`/workspace/${workspaceId}/config`);
   };
 
   return (
@@ -106,7 +104,8 @@ export default function WorkspacePage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {workspaces.map((workspace) => (
-              <button
+              <div
+              role="button"
                 key={workspace.id}
                 onClick={() => handleWorkspaceClick(workspace.id)}
                 className="bg-card border border-border rounded-2xl p-6 text-left hover:border-primary/50 hover:shadow-lg transition-all group"
@@ -127,11 +126,40 @@ export default function WorkspacePage() {
                       />
                     </svg>
                   </div>
-                  {workspace.isOwner && (
-                    <span className="px-2 py-1 text-xs font-medium rounded-lg bg-primary/10 text-primary">
-                      Proprietário
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {workspace.isOwner && (
+                      <>
+                        <button
+                          onClick={(e) => handleConfigClick(e, workspace.id)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-card-hover transition-colors text-muted hover:text-foreground"
+                          aria-label="Configurações"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        </button>
+                        <span className="px-2 py-1 text-xs font-medium rounded-lg bg-primary/10 text-primary">
+                          Proprietário
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                   {workspace.name}
@@ -145,7 +173,7 @@ export default function WorkspacePage() {
                     <span>{workspace._count.transactions || 0} transações</span>
                   </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}

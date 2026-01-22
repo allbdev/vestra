@@ -48,3 +48,50 @@ export async function sendConfirmationEmail(
 export function generateConfirmationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+export async function sendWorkspaceInviteEmail(
+  email: string,
+  workspaceName: string,
+  workspaceId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    const inviteUrl = `${appUrl}/workspace/${workspaceId}/invite/${userId}`;
+
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "Vestra <no-reply@vestra-financas.com.br>",
+      to: email,
+      subject: `Convite para o workspace ${workspaceName} - Vestra`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #333; text-align: center;">Convite para Workspace</h1>
+          <p style="color: #666; font-size: 16px;">
+            Você foi convidado para o workspace <strong>${workspaceName}</strong>. Clique no botão abaixo para aceitar ou recusar o convite:
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Ver Convite
+            </a>
+          </div>
+          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 40px;">
+            Se você não esperava este convite, ignore este e-mail.
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Failed to send workspace invite email:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Email service error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send email",
+    };
+  }
+}

@@ -43,7 +43,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   // Load selected workspace from localStorage on mount
   useEffect(() => {
     const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
-    console.log(user);
     const amIOnWorkspace = user?.workspaces.some((workspace) => workspace.id === savedWorkspaceId);
     if (savedWorkspaceId && amIOnWorkspace) {
       setSelectedWorkspaceIdState(savedWorkspaceId);

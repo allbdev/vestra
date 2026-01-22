@@ -12,8 +12,13 @@ export default function WorkspaceLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  const isInvitePage = window && window.location.pathname.includes('/invite');
+
   useEffect(() => {
     if (!loading && !user) {
+      if (isInvitePage) {
+        return;
+      }
       router.push("/login");
     }
   }, [loading, user, router]);
@@ -29,7 +34,7 @@ export default function WorkspaceLayout({
     );
   }
 
-  if (!user) {
+  if (!user && !isInvitePage) {
     return null;
   }
 
