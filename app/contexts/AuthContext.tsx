@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { getStorageItem, setStorageItem, removeStorageItem } from "../lib/storage";
 
 interface User {
   id: number;
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserInfo = async () => {
     try {
-      const sessionToken = localStorage.getItem("sessionToken");
+      const sessionToken = getStorageItem("sessionToken");
       
       if (!sessionToken) {
         setUser(null);
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         if (response.status === 401) {
           // Session expired or invalid
-          localStorage.removeItem("sessionToken");
+          removeStorageItem("sessionToken");
           setUser(null);
           setLoading(false);
           return;
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (sessionToken: string, userData?: Partial<User>) => {
-    localStorage.setItem("sessionToken", sessionToken);
+    setStorageItem("sessionToken", sessionToken);
     
     // If userData is provided, use it temporarily until we fetch from API
     if (userData) {
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("sessionToken");
+    removeStorageItem("sessionToken");
     setUser(null);
     router.push("/login");
   };

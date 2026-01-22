@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
       // @ts-expect-error - using global for demo purposes
       global.pendingRegistrations = new Map();
     }
+    
     // @ts-expect-error - using global for demo purposes
     global.pendingRegistrations.set(email.toLowerCase(), {
       name,

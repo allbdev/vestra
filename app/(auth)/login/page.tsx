@@ -9,6 +9,7 @@ import { Button, Input, Alert } from "@/app/components/ui";
 import { LoginFormData, loginSchema } from "./domain";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { getStorageItem } from "@/app/lib/storage";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,8 +47,13 @@ export default function LoginPage() {
       // Use auth context to login
       await login(result.sessionToken, result.user);
 
-      // Redirect to dashboard
-      router.push("/dashboard");
+      // Check for saved workspace in localStorage
+      const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
+      if (savedWorkspaceId) {
+        router.push(`/workspace/${savedWorkspaceId}/dashboard`);
+      } else {
+        router.push("/workspace");
+      }
     } catch {
       setError("Erro de conexão. Tente novamente.");
     } finally {

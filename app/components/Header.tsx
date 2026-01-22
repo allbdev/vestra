@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
+import { getStorageItem } from "../lib/storage";
 
 export function Header() {
   const { user } = useAuth();
@@ -16,6 +17,14 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const dashboardHref = useMemo(() => {
+    if (user) {
+      const savedWorkspaceId = getStorageItem("selectedWorkspaceId");
+      return savedWorkspaceId ? `/workspace/${savedWorkspaceId}/dashboard` : "/workspace"
+    }
+    return "/workspace";
+  }, [user]);
 
   return (
     <header
@@ -46,7 +55,10 @@ export function Header() {
               Sobre
             </a>
             {user ? (
-              <Link href="/dashboard" className="text-muted hover:text-foreground transition-colors">
+              <Link 
+                href={dashboardHref}
+                className="text-muted hover:text-foreground transition-colors"
+              >
                 Dashboard
               </Link>
             ) : (

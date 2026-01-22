@@ -8,7 +8,7 @@ export async function sendConfirmationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Vestra <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM || "Vestra <no-reply@vestra-financas.com.br>",
       to: email,
       subject: "Confirme seu e-mail - Vestra",
       html: `
