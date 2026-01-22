@@ -12,7 +12,7 @@ export interface WorkspaceAccess {
  */
 export async function checkWorkspaceAccess(
   workspaceId: string,
-  userId: number
+  userId: string
 ): Promise<WorkspaceAccess | null> {
   const workspace = await db.workspace.findFirst({
     where: {
@@ -51,7 +51,7 @@ export async function checkWorkspaceAccess(
 /**
  * Get all workspace IDs that a user has access to
  */
-export async function getUserWorkspaceIds(userId: number): Promise<string[]> {
+export async function getUserWorkspaceIds(userId: string): Promise<string[]> {
   const workspaces = await db.workspace.findMany({
     where: {
       deletedAt: null,

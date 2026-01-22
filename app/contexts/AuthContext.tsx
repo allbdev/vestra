@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getStorageItem, setStorageItem, removeStorageItem } from "../lib/storage";
 
 interface User {
-  id: number;
+  id: string;
   name: string | null;
   email: string;
   createdAt: string;

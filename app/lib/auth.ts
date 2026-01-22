@@ -15,7 +15,7 @@ export function getTokenExpiry(): Date {
 }
 
 export interface AuthenticatedUser {
-  id: number;
+  id: string;
   email: string;
   name: string | null;
 }

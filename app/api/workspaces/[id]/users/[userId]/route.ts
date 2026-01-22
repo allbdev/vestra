@@ -18,14 +18,6 @@ export async function DELETE(
     }
 
     const { id: workspaceId, userId: targetUserId } = await params;
-    const targetUserIdInt = parseInt(targetUserId, 10);
-
-    if (isNaN(targetUserIdInt)) {
-      return NextResponse.json(
-        { error: "ID do usuário inválido" },
-        { status: 400 }
-      );
-    }
 
     // Check if workspace exists
     const workspace = await db.workspace.findFirst({
@@ -43,7 +35,7 @@ export async function DELETE(
     }
 
     // Cannot remove the owner from workspace
-    if (targetUserIdInt === workspace.ownerId) {
+    if (targetUserId === workspace.ownerId) {
       return NextResponse.json(
         { error: "O proprietário não pode ser removido do workspace" },
         { status: 400 }
@@ -51,7 +43,7 @@ export async function DELETE(
     }
 
     // Only owner can remove other users, or user can remove themselves
-    if (workspace.ownerId !== user.id && user.id !== targetUserIdInt) {
+    if (workspace.ownerId !== user.id && user.id !== targetUserId) {
       return NextResponse.json(
         { error: "Você não tem permissão para remover este usuário" },
         { status: 403 }
@@ -62,7 +54,7 @@ export async function DELETE(
     const workspaceUser = await db.workspaceUser.findFirst({
       where: {
         workspaceId,
-        userId: targetUserIdInt,
+        userId: targetUserId,
         deletedAt: null,
       },
     });
@@ -80,7 +72,7 @@ export async function DELETE(
       data: { deletedAt: new Date() },
     });
 
-    const message = user.id === targetUserIdInt
+    const message = user.id === targetUserId
       ? "Você saiu do workspace com sucesso"
       : "Usuário removido do workspace com sucesso";
 

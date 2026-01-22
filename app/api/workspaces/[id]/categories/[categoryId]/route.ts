@@ -26,14 +26,6 @@ export async function GET(
     }
 
     const { id: workspaceId, categoryId } = await params;
-    const categoryIdInt = parseInt(categoryId, 10);
-
-    if (isNaN(categoryIdInt)) {
-      return NextResponse.json(
-        { error: "ID da categoria inválido" },
-        { status: 400 }
-      );
-    }
 
     // Check workspace access
     const access = await checkWorkspaceAccess(workspaceId, user.id);
@@ -46,7 +38,7 @@ export async function GET(
 
     const category = await db.category.findFirst({
       where: {
-        id: categoryIdInt,
+        id: categoryId,
         workspaceId,
         deletedAt: null,
       },
@@ -105,14 +97,6 @@ export async function PUT(
     }
 
     const { id: workspaceId, categoryId } = await params;
-    const categoryIdInt = parseInt(categoryId, 10);
-
-    if (isNaN(categoryIdInt)) {
-      return NextResponse.json(
-        { error: "ID da categoria inválido" },
-        { status: 400 }
-      );
-    }
 
     // Check workspace access
     const access = await checkWorkspaceAccess(workspaceId, user.id);
@@ -126,7 +110,7 @@ export async function PUT(
     // Check if category exists
     const existingCategory = await db.category.findFirst({
       where: {
-        id: categoryIdInt,
+        id: categoryId,
         workspaceId,
         deletedAt: null,
       },
@@ -214,7 +198,7 @@ export async function PUT(
 
     // Update category
     const category = await db.category.update({
-      where: { id: categoryIdInt },
+      where: { id: categoryId },
       data: updateData,
       include: {
         owner: {
@@ -265,14 +249,6 @@ export async function DELETE(
     }
 
     const { id: workspaceId, categoryId } = await params;
-    const categoryIdInt = parseInt(categoryId, 10);
-
-    if (isNaN(categoryIdInt)) {
-      return NextResponse.json(
-        { error: "ID da categoria inválido" },
-        { status: 400 }
-      );
-    }
 
     // Check workspace access
     const access = await checkWorkspaceAccess(workspaceId, user.id);
@@ -286,7 +262,7 @@ export async function DELETE(
     // Check if category exists
     const existingCategory = await db.category.findFirst({
       where: {
-        id: categoryIdInt,
+        id: categoryId,
         workspaceId,
         deletedAt: null,
       },
@@ -311,13 +287,13 @@ export async function DELETE(
     const [transactionsCount, templatesCount] = await Promise.all([
       db.transaction.count({
         where: {
-          categoryId: categoryIdInt,
+          categoryId: categoryId,
           deletedAt: null,
         },
       }),
       db.transactionTemplate.count({
         where: {
-          categoryId: categoryIdInt,
+          categoryId: categoryId,
           deletedAt: null,
         },
       }),
@@ -338,7 +314,7 @@ export async function DELETE(
 
     // Soft delete category
     await db.category.update({
-      where: { id: categoryIdInt },
+      where: { id: categoryId },
       data: { deletedAt: new Date() },
     });
 

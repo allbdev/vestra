@@ -8,10 +8,10 @@ import { useAuth } from "./AuthContext";
 interface Workspace {
   id: string;
   name: string;
-  ownerId: number;
+  ownerId: string;
   isOwner: boolean;
   owner: {
-    id: number;
+    id: string;
     name: string | null;
     email: string;
   };
