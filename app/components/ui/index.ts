@@ -8,3 +8,5 @@ export { CodeInput } from "./CodeInput";
 
 export { Alert } from "./Alert";
 
+
+export { Modal } from "./Modal";

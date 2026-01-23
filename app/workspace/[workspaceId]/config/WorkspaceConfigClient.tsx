@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Alert } from "@/app/components/ui";
+import { Button } from "@/app/components/ui";
 import { InviteUserModal } from "@/app/components/InviteUserModal";
-import { removeUser } from "@/app/actions/workspace";
-import { useActionState } from "react";
+import { RemoveUserModal } from "@/app/components/RemoveUserModal";
 import { useRouter } from "next/navigation";
 import type { WorkspaceConfigData } from "@/app/lib/workspace-config-data";
 import { Title } from "@/app/components/Title";
@@ -16,8 +15,6 @@ interface WorkspaceConfigClientProps {
 export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps) {
   const router = useRouter();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [removeState, removeAction, removePending] = useActionState(removeUser, undefined);
-
 
   const handleInviteSent = () => {
     // Refresh the page to show updated user list
@@ -53,18 +50,6 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
           </Button>
         </div>
 
-        {removeState?.errors?._form && (
-          <Alert variant="error" className="mb-6">
-            {removeState.errors._form[0]}
-          </Alert>
-        )}
-
-        {removeState?.message && (
-          <Alert className="mb-6">
-            {removeState.message}
-          </Alert>
-        )}
-
         {/* Users List */}
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-xl font-semibold mb-4">Usuários do Workspace</h2>
@@ -99,36 +84,7 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
                     </div>
                   </div>
                   {!workspaceUser.isOwner && (
-                    <form action={removeAction}>
-                      <input type="hidden" name="workspaceId" value={workspace.id} />
-                      <input type="hidden" name="userId" value={workspaceUser.id} />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        type="submit"
-                        disabled={removePending}
-                        onClick={(e) => {
-                          if (!confirm("Tem certeza que deseja remover este usuário do workspace?")) {
-                            e.preventDefault();
-                          }
-                        }}
-                      >
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                        Remover
-                      </Button>
-                    </form>
+                    <RemoveUserModal workspaceId={workspace.id} user={workspaceUser} />
                   )}
                 </div>
               ))}

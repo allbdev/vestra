@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "unstyled";
+  variant?: "primary" | "secondary" | "ghost" | "unstyled" | "destructive";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
@@ -31,6 +31,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "bg-card-hover hover:bg-border text-foreground border border-border",
       ghost: "text-muted hover:text-foreground hover:bg-card-hover",
       unstyled: "!p-0 bg-transparent hover:bg-transparent hover:text-foreground hover:bg-card-hover",
+      destructive: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20 hover:shadow-red-600/30",
     };
 
     const sizes = {
