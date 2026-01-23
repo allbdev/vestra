@@ -4,9 +4,12 @@ import { useState } from "react";
 import { Button } from "@/app/components/ui";
 import { InviteUserModal } from "@/app/components/InviteUserModal";
 import { RemoveUserModal } from "@/app/components/RemoveUserModal";
+import { EditWorkspaceModal } from "@/app/components/EditWorkspaceModal";
+import { DeleteWorkspaceModal } from "@/app/components/DeleteWorkspaceModal";
 import { useRouter } from "next/navigation";
 import type { WorkspaceConfigData } from "@/app/lib/workspace-config-data";
 import { Title } from "@/app/components/Title";
+import { FiEdit, FiTrash } from "react-icons/fi";
 
 interface WorkspaceConfigClientProps {
   workspace: WorkspaceConfigData;
@@ -15,6 +18,8 @@ interface WorkspaceConfigClientProps {
 export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps) {
   const router = useRouter();
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleInviteSent = () => {
     // Refresh the page to show updated user list
@@ -27,7 +32,7 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Title>Configurações do Workspace</Title>
+            <Title backUrl={`/workspace`}>Configurações do Workspace</Title>
             <p className="text-muted">
               {workspace.name}
             </p>
@@ -52,7 +57,25 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
 
         {/* Users List */}
         <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Usuários do Workspace</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Usuários do Workspace</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="p-2 rounded-lg hover:bg-card-hover transition-colors text-muted hover:text-primary"
+                title="Editar nome do workspace"
+              >
+                <FiEdit className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="p-2 rounded-lg hover:bg-red-50 transition-colors text-muted hover:text-red-600"
+                title="Excluir workspace"
+              >
+                <FiTrash className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
           {workspace.users.length === 0 ? (
             <p className="text-muted text-center py-8">
@@ -98,6 +121,19 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
         onClose={() => setIsInviteModalOpen(false)}
         workspaceId={workspace.id}
         onInviteSent={handleInviteSent}
+      />
+
+      <EditWorkspaceModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        workspaceId={workspace.id}
+        currentName={workspace.name}
+      />
+
+      <DeleteWorkspaceModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        workspaceId={workspace.id}
       />
     </div>
   );

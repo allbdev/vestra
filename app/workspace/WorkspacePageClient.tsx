@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui";
 import { CreateWorkspaceModal } from "@/app/components/CreateWorkspaceModal";
+import { LeaveWorkspaceModal } from "@/app/components/LeaveWorkspaceModal";
 import { useState } from "react";
 import type { WorkspaceData } from "@/app/lib/workspace-data";
 import { setSessionSelectedWorkspaceId } from "../actions/workspace";
 import { Title } from "../components/Title";
+import { FiLogOut } from "react-icons/fi";
 
 interface WorkspacePageClientProps {
   workspaces: WorkspaceData[];
@@ -15,6 +17,7 @@ interface WorkspacePageClientProps {
 export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [leaveModalData, setLeaveModalData] = useState<{ isOpen: boolean; workspaceId: string; workspaceName: string } | null>(null);
 
   const handleWorkspaceClick = (workspaceId: string) => {
     setSessionSelectedWorkspaceId(workspaceId);
@@ -24,6 +27,11 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
   const handleConfigClick = (e: React.MouseEvent, workspaceId: string) => {
     e.stopPropagation();
     router.push(`/workspace/${workspaceId}/config`);
+  };
+
+  const handleLeaveClick = (e: React.MouseEvent, workspaceId: string, workspaceName: string) => {
+    e.stopPropagation();
+    setLeaveModalData({ isOpen: true, workspaceId, workspaceName });
   };
 
   return (
@@ -107,7 +115,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
                     </svg>
                   </div>
                   <div className="flex items-center gap-2">
-                    {workspace.isOwner && (
+                    {workspace.isOwner ? (
                       <>
                         <button
                           onClick={(e) => handleConfigClick(e, workspace.id)}
@@ -124,7 +132,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                             />
                             <path
                               strokeLinecap="round"
@@ -138,6 +146,15 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
                           Proprietário
                         </span>
                       </>
+                    ) : (
+                      <button
+                        onClick={(e) => handleLeaveClick(e, workspace.id, workspace.name)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-card-hover transition-colors text-muted hover:text-red-500"
+                        aria-label="Sair do workspace"
+                        title="Sair do workspace"
+                      >
+                        <FiLogOut className="w-5 h-5" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -162,6 +179,15 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
         />
+
+        {leaveModalData && (
+          <LeaveWorkspaceModal
+            isOpen={leaveModalData.isOpen}
+            onClose={() => setLeaveModalData(null)}
+            workspaceId={leaveModalData.workspaceId}
+            workspaceName={leaveModalData.workspaceName}
+          />
+        )}
       </div>
     </div>
   );

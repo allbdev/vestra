@@ -54,7 +54,7 @@ export async function createWorkspace(
   }
 
   let workspaceId: string;
-  
+
   try {
     // Create workspace
     const workspace = await db.workspace.create({
@@ -172,7 +172,7 @@ export async function inviteUser(
           error: "Convite já enviado para este usuário",
         };
       }
-      
+
       // If there's an old invite (accepted/rejected), update it to waiting
       const updatedInvite = await db.workspaceInvite.update({
         where: {
@@ -324,6 +324,273 @@ export async function removeUser(
     return {
       errors: {
         _form: ["Erro ao remover usuário. Tente novamente."],
+      },
+    };
+  }
+}
+
+export interface UpdateWorkspaceNameFormState {
+  errors?: {
+    name?: string[];
+    _form?: string[];
+  };
+  message?: string;
+}
+
+export async function updateWorkspaceName(
+  prevState: UpdateWorkspaceNameFormState | undefined,
+  formData: FormData
+): Promise<UpdateWorkspaceNameFormState> {
+  const user = await verifySession();
+
+  if (!user) {
+    return {
+      errors: {
+        _form: ["Não autenticado"],
+      },
+    };
+  }
+
+  const workspaceId = formData.get("workspaceId") as string;
+  const name = formData.get("name") as string;
+
+  if (!workspaceId) {
+    return {
+      errors: {
+        _form: ["ID do workspace inválido"],
+      },
+    };
+  }
+
+  // Validate name
+  if (!name || name.trim().length < 2) {
+    return {
+      errors: {
+        name: ["Nome do workspace é obrigatório e deve ter pelo menos 2 caracteres"],
+      },
+    };
+  }
+
+  if (name.trim().length > 255) {
+    return {
+      errors: {
+        name: ["Nome deve ter no máximo 255 caracteres"],
+      },
+    };
+  }
+
+  try {
+    // Check if workspace exists and user is owner
+    const workspace = await db.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        deletedAt: null,
+        ownerId: user.id,
+      },
+    });
+
+    if (!workspace) {
+      return {
+        errors: {
+          _form: ["Workspace não encontrado ou sem permissão"],
+        },
+      };
+    }
+
+    // Update workspace name
+    await db.workspace.update({
+      where: { id: workspaceId },
+      data: { name: name.trim() },
+    });
+
+    revalidatePath(`/workspace/${workspaceId}/config`);
+    revalidatePath(`/workspace`);
+
+    return {
+      message: "Nome do workspace atualizado com sucesso",
+    };
+  } catch (error: any) {
+    console.error("Update workspace name error:", error);
+    return {
+      errors: {
+        _form: ["Erro ao atualizar nome do workspace. Tente novamente."],
+      },
+    };
+  }
+}
+
+export interface DeleteWorkspaceFormState {
+  errors?: {
+    _form?: string[];
+  };
+  success?: boolean;
+}
+
+export async function deleteWorkspace(
+  prevState: DeleteWorkspaceFormState | undefined,
+  formData: FormData
+): Promise<DeleteWorkspaceFormState> {
+  const user = await verifySession();
+
+  if (!user) {
+    return {
+      errors: {
+        _form: ["Não autenticado"],
+      },
+    };
+  }
+
+  const workspaceId = formData.get("workspaceId") as string;
+
+  if (!workspaceId) {
+    return {
+      errors: {
+        _form: ["ID do workspace inválido"],
+      },
+    };
+  }
+
+  try {
+    // Check if workspace exists and user is owner
+    const workspace = await db.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        deletedAt: null,
+        ownerId: user.id,
+      },
+    });
+
+    if (!workspace) {
+      return {
+        errors: {
+          _form: ["Workspace não encontrado ou sem permissão"],
+        },
+      };
+    }
+
+    // Soft delete workspace
+    await db.workspace.update({
+      where: { id: workspaceId },
+      data: { deletedAt: new Date() },
+    });
+
+    // Check if the deleted workspace is the currently selected one
+    const cookieStore = await cookies();
+    const selectedWorkspaceId = cookieStore.get(storageKeys.selectedWorkspaceId)?.value;
+
+    if (selectedWorkspaceId === workspaceId) {
+      cookieStore.delete(storageKeys.selectedWorkspaceId);
+    }
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    console.error("Delete workspace error:", error);
+    return {
+      errors: {
+        _form: ["Erro ao excluir workspace. Tente novamente."],
+      },
+    };
+  }
+}
+
+export interface LeaveWorkspaceFormState {
+  errors?: {
+    _form?: string[];
+  };
+  success?: boolean;
+}
+
+export async function leaveWorkspace(
+  prevState: LeaveWorkspaceFormState | undefined,
+  formData: FormData
+): Promise<LeaveWorkspaceFormState> {
+  const user = await verifySession();
+
+  if (!user) {
+    return {
+      errors: {
+        _form: ["Não autenticado"],
+      },
+    };
+  }
+
+  const workspaceId = formData.get("workspaceId") as string;
+
+  if (!workspaceId) {
+    return {
+      errors: {
+        _form: ["ID do workspace inválido"],
+      },
+    };
+  }
+
+  try {
+    // Check if workspace exists
+    const workspace = await db.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        deletedAt: null,
+      },
+    });
+
+    if (!workspace) {
+      return {
+        errors: {
+          _form: ["Workspace não encontrado"],
+        },
+      };
+    }
+
+    // Check if user is the owner (cannot leave)
+    if (workspace.ownerId === user.id) {
+      return {
+        errors: {
+          _form: ["Proprietário não pode sair do workspace. Use a opção de excluir."],
+        },
+      };
+    }
+
+    // Check if user is member
+    const workspaceUser = await db.workspaceUser.findFirst({
+      where: {
+        workspaceId,
+        userId: user.id,
+        deletedAt: null,
+      },
+    });
+
+    if (!workspaceUser) {
+      return {
+        errors: {
+          _form: ["Você não é membro deste workspace"],
+        },
+      };
+    }
+
+    // Soft delete workspace user
+    await db.workspaceUser.update({
+      where: { id: workspaceUser.id },
+      data: { deletedAt: new Date() },
+    });
+
+    // Check if the left workspace is the currently selected one
+    const cookieStore = await cookies();
+    const selectedWorkspaceId = cookieStore.get(storageKeys.selectedWorkspaceId)?.value;
+
+    if (selectedWorkspaceId === workspaceId) {
+      cookieStore.delete(storageKeys.selectedWorkspaceId);
+    }
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    console.error("Leave workspace error:", error);
+    return {
+      errors: {
+        _form: ["Erro ao sair do workspace. Tente novamente."],
       },
     };
   }

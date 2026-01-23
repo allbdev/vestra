@@ -67,7 +67,6 @@ export async function getUserWorkspaces(): Promise<WorkspaceData[]> {
     },
   });
 
-  // Transform response to include isOwner flag
   return workspaces.map((workspace) => ({
     id: workspace.id,
     name: workspace.name,
@@ -76,5 +75,55 @@ export async function getUserWorkspaces(): Promise<WorkspaceData[]> {
     owner: workspace.owner,
     _count: workspace._count,
   }));
+}
+
+/**
+ * Get a single workspace by ID if user has access
+ */
+export async function getWorkspace(workspaceId: string): Promise<WorkspaceData | null> {
+  const user = await verifySession();
+
+  if (!user) {
+    return null;
+  }
+
+  const workspace = await db.workspace.findFirst({
+    where: {
+      id: workspaceId,
+      deletedAt: null,
+      OR: [
+        { ownerId: user.id },
+        {
+          users: {
+            some: {
+              userId: user.id,
+              deletedAt: null,
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!workspace) {
+    return null;
+  }
+
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    ownerId: workspace.ownerId,
+    isOwner: workspace.ownerId === user.id,
+    owner: workspace.owner,
+  };
 }
 
