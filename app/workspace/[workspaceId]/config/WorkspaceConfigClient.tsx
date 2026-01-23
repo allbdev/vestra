@@ -7,6 +7,7 @@ import { removeUser } from "@/app/actions/workspace";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import type { WorkspaceConfigData } from "@/app/lib/workspace-config-data";
+import { Title } from "@/app/components/Title";
 
 interface WorkspaceConfigClientProps {
   workspace: WorkspaceConfigData;
@@ -29,7 +30,7 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Configurações do Workspace</h1>
+            <Title>Configurações do Workspace</Title>
             <p className="text-muted">
               {workspace.name}
             </p>

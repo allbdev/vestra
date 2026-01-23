@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { verifySession } from "@/app/lib/session";
 import { db } from "@/app/lib/db";
 import { sendWorkspaceInviteEmail } from "@/app/lib/email";
+import { cookies } from "next/headers";
+import { storageKeys } from "../lib/consts";
 
 export interface WorkspaceFormState {
   errors?: {
@@ -327,3 +329,25 @@ export async function removeUser(
   }
 }
 
+
+/**
+ * Set session token in cookie
+ */
+export async function setSessionSelectedWorkspaceId(workspaceId: string): Promise<void> {
+  const cookieStore = await cookies();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
+  cookieStore.set(storageKeys.selectedWorkspaceId, workspaceId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+export async function getSessionSelectedWorkspaceId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(storageKeys.selectedWorkspaceId)?.value || null;
+}

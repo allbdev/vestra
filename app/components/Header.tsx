@@ -10,9 +10,10 @@ interface HeaderProps {
     email: string;
     name: string | null;
   } | null;
+  selectedWorkspaceId: string | null;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, selectedWorkspaceId }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export function Header({ user }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const dashboardHref = user ? "/workspace" : "/workspace";
+  const dashboardHref = selectedWorkspaceId ? `/workspace/${selectedWorkspaceId}/dashboard` : "/workspace";
 
   return (
     <header
@@ -53,25 +54,23 @@ export function Header({ user }: HeaderProps) {
             <a href="#sobre" className="text-muted hover:text-foreground transition-colors">
               Sobre
             </a>
-            {user ? (
-              <Link 
-                href={dashboardHref}
-                className="text-muted hover:text-foreground transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link href="/login" className="text-muted hover:text-foreground transition-colors">
-                Entrar
-              </Link>
-            )}
           </nav>
 
           {/* CTA Button */}
           <div className="flex items-center gap-4">
-            <Link href="/register">
-              <Button size="sm">Começar Grátis</Button>
-            </Link>
+            {
+              user ? (
+                <Link href={dashboardHref}>
+                  <div className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-sm font-semibold text-muted">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <Button size="sm">Entrar</Button>
+                </Link>
+              )
+            }
           </div>
         </div>
       </div>

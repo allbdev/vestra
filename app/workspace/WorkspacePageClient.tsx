@@ -5,6 +5,8 @@ import { Button } from "@/app/components/ui";
 import { CreateWorkspaceModal } from "@/app/components/CreateWorkspaceModal";
 import { useState } from "react";
 import type { WorkspaceData } from "@/app/lib/workspace-data";
+import { setSessionSelectedWorkspaceId } from "../actions/workspace";
+import { Title } from "../components/Title";
 
 interface WorkspacePageClientProps {
   workspaces: WorkspaceData[];
@@ -15,6 +17,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleWorkspaceClick = (workspaceId: string) => {
+    setSessionSelectedWorkspaceId(workspaceId);
     router.push(`/workspace/${workspaceId}/dashboard`);
   };
 
@@ -29,7 +32,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Workspaces</h1>
+            <Title>Workspaces</Title>
             <p className="text-muted">
               Selecione um workspace para gerenciar suas finanças
             </p>

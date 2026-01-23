@@ -3,14 +3,16 @@ import { Header } from "./components/Header";
 import { BackgroundEffects } from "./components/BackgroundEffects";
 import { Button } from "./components/ui";
 import { verifySession } from "./lib/session";
+import { getSessionSelectedWorkspaceId } from "./actions/workspace";
 
 export default async function Home() {
   const user = await verifySession();
+  const selectedWorkspaceId = await getSessionSelectedWorkspaceId();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       <BackgroundEffects />
-      <Header user={user} />
+      <Header user={user} selectedWorkspaceId={selectedWorkspaceId} />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8">

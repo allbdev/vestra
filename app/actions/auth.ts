@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { generateSessionToken, getTokenExpiry } from "@/app/lib/auth";
 import { setSessionToken, clearSessionToken } from "@/app/lib/session";
 import * as yup from "yup";
+import { getSessionSelectedWorkspaceId } from "./workspace";
 
 const loginSchema = yup.object({
   email: yup
@@ -113,6 +114,18 @@ export async function login(
         _form: ["Ocorreu um erro inesperado"],
       },
     };
+  }
+
+  try {
+    const savedWorkspaceId = await getSessionSelectedWorkspaceId();
+
+    // todo: check user workspaces
+
+    if (savedWorkspaceId) {
+      redirect(`/workspace/${savedWorkspaceId}/dashboard`);
+    }
+  } catch (error: any) {
+    console.error("Set session selected workspace id error:", error);
   }
 
   // Redirect outside try-catch so the redirect error can propagate
