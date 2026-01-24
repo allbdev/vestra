@@ -11,7 +11,7 @@ This document outlines the rules and standards that AI agents must follow when w
 - **Server Actions**: Use standard Next.js Server Actions.
 - **State Management**:
   - Do **not** use `useState` for managing form data or submission status (loading, success, error) manually.
-  - **Must** use `useForm` from react-hook-form to manage form state and validation.
+  - **Must** use `useActionState` react hook to handle data management.
 
 ## 3. Icons
 - Use the `react-icons` package for all icons.

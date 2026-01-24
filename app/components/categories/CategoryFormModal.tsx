@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect, useActionState, PropsWithChildren } from "react";
 import { Button, Input } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
 import { CategoryActionState } from "@/app/actions/categories";
@@ -33,7 +33,26 @@ const COLORS = [
     "#64748B", // Slate
 ];
 
-export function CategoryFormModal({
+export function CategoryFormModal ({
+    isOpen,
+    onClose,
+    categoryToEdit,
+    action,
+}: CategoryFormModalProps) {
+    if (!isOpen) return null;
+
+
+    return (
+        <CategoryFormModalContent
+            isOpen={isOpen}
+            onClose={onClose}
+            categoryToEdit={categoryToEdit}
+            action={action}
+        />
+    );
+}
+
+function CategoryFormModalContent({
     isOpen,
     onClose,
     categoryToEdit,
