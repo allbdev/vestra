@@ -10,6 +10,14 @@ export default async function WorkspaceIdLayout({
 }) {
     const { workspaceId } = await params;
 
+    // Check if this is an invite route (set by proxy)
+    const headersList = await import("next/headers").then(h => h.headers());
+    const isInviteRoute = headersList.get("x-invite-route") === "true";
+
+    if (isInviteRoute) {
+        return <>{children}</>;
+    }
+
     const workspace = await getWorkspace(workspaceId);
 
     if (!workspace) {

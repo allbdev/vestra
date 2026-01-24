@@ -5,12 +5,17 @@ export function proxy(request: NextRequest) {
 
   // Detect invite routes: /workspace/[workspaceId]/invite/[userId]
   const inviteRoutePattern = /^\/workspace\/[^/]+\/invite\/[^/]+$/;
-  
+
   if (inviteRoutePattern.test(pathname)) {
     // Set a custom header to indicate this is an invite route
-    const response = NextResponse.next();
-    response.headers.set("x-invite-route", "true");
-    return response;
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-invite-route", "true");
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   return NextResponse.next();

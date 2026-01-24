@@ -110,9 +110,8 @@ model Category {
   workspaceId String    @map("workspace_id") @db.VarChar(36)
   ownerId     String    @map("owner_id") @db.VarChar(36)
   name        String    @db.VarChar(100)
-  type        String?   @db.VarChar(10) // 'revenue' or 'expense'
+  type        Int       @db.Int // 1=Income, 2=Expense
   color       String?   @db.VarChar(7)
-  icon        String?   @db.VarChar(50)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/app/components/ui";
 import { useEffect } from "react";
 import { AiOutlineRetweet } from "react-icons/ai";
@@ -51,7 +52,8 @@ export function DashboardLayoutClient({
             </div>
           </div>
           <nav className="flex-1 px-3 py-4 space-y-1 text-sm">
-            <DashboardNavItem label="Visão Geral" active />
+            <DashboardNavItem label="Visão Geral" href={workspace ? `/workspace/${workspace.id}/dashboard` : "#"} active={false} />
+            <DashboardNavItem label="Categorias" href={workspace ? `/workspace/${workspace.id}/dashboard/categories` : "#"} active={false} />
             <DashboardNavItem label="Transações" />
             <DashboardNavItem label="Orçamentos" />
             <DashboardNavItem label="Relatórios" />
@@ -119,16 +121,30 @@ export function DashboardLayoutClient({
 interface DashboardNavItemProps {
   label: string;
   active?: boolean;
+  href?: string;
 }
 
-function DashboardNavItem({ label, active }: DashboardNavItemProps) {
+function DashboardNavItem({ label, active, href }: DashboardNavItemProps) {
+  const className = `w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors text-sm ${active
+    ? "bg-primary/10 text-foreground border border-primary/30"
+    : "text-muted hover:text-foreground hover:bg-card-hover"
+    }`;
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        <span>{label}</span>
+        {active && (
+          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+        )}
+      </Link>
+    );
+  }
+
   return (
     <button
       type="button"
-      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors text-sm ${active
-          ? "bg-primary/10 text-foreground border border-primary/30"
-          : "text-muted hover:text-foreground hover:bg-card-hover"
-        }`}
+      className={className}
     >
       <span>{label}</span>
       {active && (
