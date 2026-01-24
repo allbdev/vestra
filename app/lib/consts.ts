@@ -10,7 +10,6 @@ export enum CATEGORY_TYPES {
 }
 
 export const storageKeys = {
-  sessionToken: "sessionToken",
-  // Inferred from usage in workspace.ts
-  selectedWorkspaceId: "selectedWorkspaceId",
+  selectedWorkspaceId: "vestra_selected_workspace_id",
+  sessionToken: "vestra_session_token",
 };
