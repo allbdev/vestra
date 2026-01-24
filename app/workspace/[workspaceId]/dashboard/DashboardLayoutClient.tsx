@@ -79,7 +79,7 @@ export function DashboardLayoutClient({
                     {workspace?.name || "Workspace"}
                   </p>
                   <Button variant="unstyled" size="sm" onClick={handleChangeWorkspace}>
-                    <AiOutlineRetweet className="w-4 h-4" />
+                    <AiOutlineRetweet className="!size-4" />
                   </Button>
                 </div>
                 <h1 className="text-lg font-semibold">Olá, {displayName}</h1>
@@ -125,11 +125,10 @@ function DashboardNavItem({ label, active }: DashboardNavItemProps) {
   return (
     <button
       type="button"
-      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors text-sm ${
-        active
+      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors text-sm ${active
           ? "bg-primary/10 text-foreground border border-primary/30"
           : "text-muted hover:text-foreground hover:bg-card-hover"
-      }`}
+        }`}
     >
       <span>{label}</span>
       {active && (

@@ -9,6 +9,8 @@ import type { WorkspaceData } from "@/app/lib/workspace-data";
 import { setSessionSelectedWorkspaceId } from "../actions/workspace";
 import { Title } from "../components/Title";
 import { FiLogOut } from "react-icons/fi";
+import { GoGear, GoPlus } from "react-icons/go";
+import { FaRegBuilding } from "react-icons/fa";
 
 interface WorkspacePageClientProps {
   workspaces: WorkspaceData[];
@@ -46,20 +48,10 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
             </p>
           </div>
           <Button onClick={() => setIsCreateModalOpen(true)}>
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Novo Workspace
+            <div className="flex items-center gap-2">
+              <GoPlus />
+              Novo Workspace
+            </div>
           </Button>
         </div>
 
@@ -67,19 +59,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
         {workspaces.length === 0 ? (
           <div className="bg-card border border-border rounded-2xl p-12 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
+              <FaRegBuilding className="text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Nenhum workspace encontrado</h3>
             <p className="text-muted mb-6">
@@ -100,19 +80,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
+                    <FaRegBuilding className="text-white" />
                   </div>
                   <div className="flex items-center gap-2">
                     {workspace.isOwner ? (
@@ -122,25 +90,7 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-card-hover transition-colors text-muted hover:text-foreground"
                           aria-label="Configurações"
                         >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
+                          <GoGear />
                         </button>
                         <span className="px-2 py-1 text-xs font-medium rounded-lg bg-primary/10 text-primary">
                           Proprietário
