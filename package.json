@@ -14,7 +14,10 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.2",
+    "@mui/material": "^7.3.7",
     "@prisma/adapter-mariadb": "^7.1.0",
     "@prisma/client": "^7.1.0",
     "bcryptjs": "^3.0.3",

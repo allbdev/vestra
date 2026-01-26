@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useActionState } from "react";
-import { Button, Input } from "@/app/components/ui";
+import { Button, Input, Select, Checkbox } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
 import { TransactionTemplateActionState } from "@/app/actions/transaction-templates";
 import { FREQUENCY_TYPES, CATEGORY_TYPES } from "@/app/lib/consts";
@@ -19,7 +19,7 @@ interface TransactionTemplate {
     baseAmount: number;
     categoryId: string | null;
     frequency: number | null;
-    startDate: Date;
+    startDate: string;
     active: boolean;
 }
 
@@ -95,13 +95,6 @@ function RecurrencyFormModalContent({
         }
     }, [state?.success, onClose]);
 
-    const incomeCategories = categories.filter(c => c.type === CATEGORY_TYPES.INCOME);
-    const expenseCategories = categories.filter(c => c.type === CATEGORY_TYPES.EXPENSE);
-
-    // Determine type based on selected category
-    const selectedCategory = categories.find(c => c.id === selectedCategoryId);
-    const templateType = selectedCategory?.type || null;
-
     return (
         <Modal
             title={templateToEdit ? "Editar Recorrência" : "Nova Recorrência"}
@@ -110,141 +103,87 @@ function RecurrencyFormModalContent({
         >
             <form
                 action={formAction}
-                className="space-y-6 pt-4"
+                className="flex flex-col gap-4"
             >
-                <div className="space-y-4">
+                <div className="flex flex-col gap-8">
                     {/* Hidden Inputs for controlled states */}
                     <input type="hidden" name="categoryId" value={selectedCategoryId} />
                     <input type="hidden" name="frequency" value={selectedFrequency || ""} />
                     <input type="hidden" name="active" value={isActive ? "true" : "false"} />
 
-                    <div>
-                        <label htmlFor="description" className="text-sm font-medium mb-1.5 block">
-                            Descrição
-                        </label>
-                        <Input
-                            autoFocus
-                            type="text"
-                            name="description"
-                            id="description"
-                            defaultValue={templateToEdit?.description}
-                            placeholder="Ex: Salário, Aluguel..."
-                            className="w-full"
-                            required
-                            error={state?.errors?.description?.[0]}
-                        />
-                    </div>
+                    <Input
+                        autoFocus
+                        type="text"
+                        name="description"
+                        id="description"
+                        label="Descrição"
+                        defaultValue={templateToEdit?.description}
+                        placeholder="Ex: Salário, Aluguel..."
+                        required
+                        error={state?.errors?.description?.[0]}
+                    />
 
-                    <div>
-                        <label htmlFor="baseAmount" className="text-sm font-medium mb-1.5 block">
-                            Valor
-                        </label>
-                        <Input
-                            type="number"
-                            name="baseAmount"
-                            id="baseAmount"
-                            step="0.01"
-                            min="0"
-                            defaultValue={templateToEdit?.baseAmount?.toString()}
-                            placeholder="0.00"
-                            className="w-full"
-                            required
-                            error={state?.errors?.baseAmount?.[0]}
-                        />
-                    </div>
+                    <Input
+                        type="number"
+                        name="baseAmount"
+                        id="baseAmount"
+                        label="Valor"
+                        step="0.01"
+                        min="0"
+                        defaultValue={templateToEdit?.baseAmount?.toString()}
+                        placeholder="0.00"
+                        required
+                        error={state?.errors?.baseAmount?.[0]}
+                    />
 
-                    <div>
-                        <label htmlFor="categoryId" className="text-sm font-medium mb-1.5 block">
-                            Categoria
-                        </label>
-                        <select
-                            id="categoryId"
-                            name="categoryId"
-                            value={selectedCategoryId}
-                            onChange={(e) => setSelectedCategoryId(e.target.value)}
-                            className="w-full px-4 py-3 bg-background border border-border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:border-primary focus:ring-primary/20"
-                        >
-                            <option value="">Selecione uma categoria</option>
-                            {incomeCategories.length > 0 && (
-                                <optgroup label="Receitas">
-                                    {incomeCategories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )}
-                            {expenseCategories.length > 0 && (
-                                <optgroup label="Despesas">
-                                    {expenseCategories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            )}
-                        </select>
-                        {state?.errors?.categoryId && (
-                            <p className="text-xs text-error mt-1.5">{state.errors.categoryId[0]}</p>
-                        )}
-                    </div>
+                    <Select
+                        label="Categoria"
+                        name="categoryId"
+                        required
+                        id="categoryId"
+                        value={selectedCategoryId}
+                        onChange={(e) => setSelectedCategoryId(e.target.value as string)}
+                        options={[
+                            { value: "", label: "Selecione uma categoria" },
+                            ...categories.map((category) => ({
+                                value: category.id,
+                                label: category.type === CATEGORY_TYPES.INCOME ? `💰 ${category.name} - (Receita)` : `💸 ${category.name} - (Despesa)`,
+                            }))
+                        ]}
+                        error={state?.errors?.categoryId?.[0]}
+                    />
 
-                    <div>
-                        <label className="text-sm font-medium mb-1.5 block">Frequência</label>
-                        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg">
-                            {Object.entries(FREQUENCY_LABELS).map(([value, label]) => {
-                                const freqValue = Number(value);
-                                return (
-                                    <button
-                                        key={value}
-                                        type="button"
-                                        onClick={() => setSelectedFrequency(freqValue)}
-                                        className={`py-2 px-4 rounded-md text-sm font-medium transition-all ${selectedFrequency === freqValue
-                                            ? "bg-card text-primary shadow-sm"
-                                            : "text-muted hover:text-foreground"
-                                            }`}
-                                    >
-                                        {label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        {state?.errors?.frequency && (
-                            <p className="text-xs text-error mt-1.5">{state.errors.frequency[0]}</p>
-                        )}
-                    </div>
+                    <Select
+                        label="Frequência"
+                        name="frequency"
+                        value={selectedFrequency || ""}
+                        onChange={(e) => setSelectedFrequency(e.target.value ? Number(e.target.value) : null)}
+                        options={Object.entries(FREQUENCY_LABELS).map(([value, label]) => ({
+                            value: Number(value),
+                            label: label,
+                        }))}
+                        required
+                        error={state?.errors?.frequency?.[0]}
+                    />
 
-                    <div>
-                        <label htmlFor="startDate" className="text-sm font-medium mb-1.5 block">
-                            Data de Início
-                        </label>
-                        <Input
-                            type="date"
-                            name="startDate"
-                            id="startDate"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full"
-                            required
-                            error={state?.errors?.startDate?.[0]}
-                        />
-                    </div>
+                    <Input
+                        type="date"
+                        name="startDate"
+                        id="startDate"
+                        label="Data de Início"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        required
+                        error={state?.errors?.startDate?.[0]}
+                    />
 
-                    <div>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                name="active"
-                                checked={isActive}
-                                onChange={(e) => setIsActive(e.target.checked)}
-                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                            />
-                            <span className="text-sm font-medium">Ativa</span>
-                        </label>
-                        {state?.errors?.active && (
-                            <p className="text-xs text-error mt-1.5">{state.errors.active[0]}</p>
-                        )}
-                    </div>
+                    <Checkbox
+                        name="active"
+                        label="Ativa"
+                        checked={isActive}
+                        onChange={(e) => setIsActive(e.target.checked)}
+                        error={state?.errors?.active?.[0]}
+                    />
                 </div>
 
                 {state?.errors?._form && (

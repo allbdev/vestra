@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useActionState, PropsWithChildren } from "react";
-import { Button, Input } from "@/app/components/ui";
+import { Button, Input, Select } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
 import { CategoryActionState } from "@/app/actions/categories";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
@@ -89,41 +89,24 @@ function CategoryFormModalContent({
                 action={formAction}
                 className="space-y-6 pt-4"
             >
-                <div className="space-y-4">
+                <div className="flex flex-col gap-8">
                     {/* Hidden Inputs for controlled states */}
                     <input type="hidden" name="type" value={selectedType} />
                     <input type="hidden" name="color" value={selectedColor} />
 
-                    <div>
-                        <label className="text-sm font-medium mb-1.5 block">Tipo</label>
-                        <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 rounded-lg">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedType(CATEGORY_TYPES.INCOME)}
-                                className={`py-2 px-4 rounded-md text-sm font-medium transition-all ${selectedType === CATEGORY_TYPES.INCOME
-                                    ? "bg-card text-emerald-500 shadow-sm"
-                                    : "text-muted hover:text-foreground"
-                                    }`}
-                            >
-                                Receita
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedType(CATEGORY_TYPES.EXPENSE)}
-                                className={`py-2 px-4 rounded-md text-sm font-medium transition-all ${selectedType === CATEGORY_TYPES.EXPENSE
-                                    ? "bg-card text-red-500 shadow-sm"
-                                    : "text-muted hover:text-foreground"
-                                    }`}
-                            >
-                                Despesa
-                            </button>
-                        </div>
-                    </div>
+                    <Select
+                        label="Tipo"
+                        name="type"
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(Number(e.target.value))}
+                        options={[
+                            { value: CATEGORY_TYPES.INCOME, label: "Receita" },
+                            { value: CATEGORY_TYPES.EXPENSE, label: "Despesa" },
+                        ]}
+                        required
+                        error={state?.errors?.type?.[0]}
+                    />
 
-                    <div>
-                        <label htmlFor="name" className="text-sm font-medium mb-1.5 block">
-                            Nome
-                        </label>
                         <Input
                             autoFocus
                             type="text"
@@ -133,8 +116,8 @@ function CategoryFormModalContent({
                             className="w-full"
                             required
                             error={state?.errors?.name?.[0]}
+                            label="Nome"
                         />
-                    </div>
 
                     <div>
                         <label className="text-sm font-medium mb-2 block">Cor</label>

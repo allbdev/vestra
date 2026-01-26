@@ -252,10 +252,14 @@ export async function getTransactionTemplates(workspaceId: string) {
             orderBy: { createdAt: "desc" },
         });
         
-        // Convert Decimal to number for client components
+        // Convert Decimal to number and Date to string for client components
         return templates.map(template => ({
             ...template,
             baseAmount: Number(template.baseAmount),
+            startDate: template.startDate.toISOString(),
+            createdAt: template.createdAt.toISOString(),
+            updatedAt: template.updatedAt.toISOString(),
+            deletedAt: template.deletedAt ? template.deletedAt.toISOString() : null,
         }));
     } catch (error) {
         console.error("Error fetching transaction templates:", error);

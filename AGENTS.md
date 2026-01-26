@@ -3,6 +3,7 @@
 This document outlines the rules and standards that AI agents must follow when working on this project.
 
 ## 1. Components
+- **Tech**: We use Material UI to build the components: https://mui.com/material-ui/getting-started/
 - **Location**: All reusable components (e.g., alerts, buttons, inputs, error displays) must be used from `app/components`.
 - **Creation**: If a required component does not exist in `app/components` (or `app/components/ui`), you must create it there. Do not define new UI components inline or in page/feature directories if they have potential for reuse.
 

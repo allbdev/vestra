@@ -21,7 +21,7 @@ interface TransactionTemplate {
     baseAmount: number;
     categoryId: string | null;
     frequency: number | null;
-    startDate: Date;
+    startDate: string;
     active: boolean;
     ownerId: string;
     category: Category | null;
@@ -63,7 +63,7 @@ export default function RecurrenciesPageClient({
         }).format(value);
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date: string | Date) => {
         return new Date(date).toLocaleDateString('pt-BR');
     };
 
@@ -155,7 +155,7 @@ function RecurrencyItem({
         }).format(value);
     };
 
-    const formatDate = (date: Date) => {
+    const formatDate = (date: string | Date) => {
         return new Date(date).toLocaleDateString('pt-BR');
     };
 
