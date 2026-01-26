@@ -1,6 +1,6 @@
 # Categories
 
-Categories should be managed by the user, and should be able to be created, updated and deleted. Only the owner of the workspace should be able to manage categories.
+Categories should be managed by the user, and should be able to be created, updated and deleted. Only the category owner /workspace  owner should be able to manage categories.
 
 Categories can have two types: income and expense.
 

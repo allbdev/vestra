@@ -55,7 +55,7 @@ export function DashboardLayoutClient({
             <DashboardNavItem label="Visão Geral" href={workspace ? `/workspace/${workspace.id}/dashboard` : "#"} active={false} />
             <DashboardNavItem label="Categorias" href={workspace ? `/workspace/${workspace.id}/dashboard/categories` : "#"} active={false} />
             <DashboardNavItem label="Recorrências" href={workspace ? `/workspace/${workspace.id}/dashboard/recurrencies` : "#"} active={false} />
-            <DashboardNavItem label="Transações" />
+            <DashboardNavItem label="Transações" href={workspace ? `/workspace/${workspace.id}/dashboard/transactions` : "#"} active={false} />
           </nav>
         </aside>
 

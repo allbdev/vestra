@@ -253,13 +253,31 @@ export async function getTransactionTemplates(workspaceId: string) {
         });
         
         // Convert Decimal to number and Date to string for client components
+        // Explicitly map all fields to avoid passing Prisma objects
         return templates.map(template => ({
-            ...template,
+            id: template.id,
+            workspaceId: template.workspaceId,
+            ownerId: template.ownerId,
+            categoryId: template.categoryId,
+            description: template.description,
             baseAmount: Number(template.baseAmount),
+            frequency: template.frequency,
             startDate: template.startDate.toISOString(),
+            active: template.active,
             createdAt: template.createdAt.toISOString(),
             updatedAt: template.updatedAt.toISOString(),
             deletedAt: template.deletedAt ? template.deletedAt.toISOString() : null,
+            category: template.category ? {
+                id: template.category.id,
+                workspaceId: template.category.workspaceId,
+                ownerId: template.category.ownerId,
+                name: template.category.name,
+                type: template.category.type,
+                color: template.category.color,
+                createdAt: template.category.createdAt.toISOString(),
+                updatedAt: template.category.updatedAt.toISOString(),
+                deletedAt: template.category.deletedAt ? template.category.deletedAt.toISOString() : null,
+            } : null,
         }));
     } catch (error) {
         console.error("Error fetching transaction templates:", error);

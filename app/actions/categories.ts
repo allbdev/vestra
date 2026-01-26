@@ -209,7 +209,20 @@ export async function getCategories(workspaceId: string) {
             },
             orderBy: { createdAt: "desc" },
         });
-        return categories;
+        
+        // Convert Date to string for client components
+        // Explicitly map all fields to avoid passing Prisma objects
+        return categories.map(category => ({
+            id: category.id,
+            workspaceId: category.workspaceId,
+            ownerId: category.ownerId,
+            name: category.name,
+            type: category.type,
+            color: category.color,
+            createdAt: category.createdAt.toISOString(),
+            updatedAt: category.updatedAt.toISOString(),
+            deletedAt: category.deletedAt ? category.deletedAt.toISOString() : null,
+        }));
     } catch (error) {
         console.error("Error fetching categories:", error);
         return [];
