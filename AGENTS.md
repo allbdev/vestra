@@ -18,6 +18,16 @@ This document outlines the rules and standards that AI agents must follow when w
 - Use the `react-icons` package for all icons.
 - Import specific icons as needed (e.g., `import { FaUser } from "react-icons/fa";`).
 
-## 4. Mobile-First Design
+## 4. Date Display
+- **Component**: Always use the `DateDisplay` component from `app/components/ui` when rendering dates in the UI.
+- **Import**: `import { DateDisplay } from "@/app/components/ui";`
+- **Usage**: `<DateDisplay date={dateString} />` or `<DateDisplay date={dateObject} />`
+- **Why**: The `DateDisplay` component uses UTC methods to avoid timezone conversion issues, ensuring dates display correctly regardless of the user's local timezone. Never use `toLocaleDateString()` or similar methods directly, as they can cause date shifts due to timezone conversions.
+- **Props**: 
+  - `date` (required): string or Date object
+  - `locale` (optional): locale string, defaults to "pt-BR"
+  - `className` (optional): additional CSS classes
+
+## 5. Mobile-First Design
 - **Priority**: This application is primarily for mobile usage.
 - **Approach**: Implement UI with a mobile-first strategy. Base styles should target mobile viewports, with responsive overrides (e.g., `md:`, `lg:`) added for larger screens only as secondary enhancements.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useActionState, useEffect } from "react";
-import { Button } from "@/app/components/ui";
+import { Button, DateDisplay } from "@/app/components/ui";
 import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { RecurrencyFormModal } from "@/app/components/recurrencies/RecurrencyFormModal";
 import { deleteTransactionTemplate, createTransactionTemplate, updateTransactionTemplate, TransactionTemplateActionState } from "@/app/actions/transaction-templates";
@@ -54,17 +54,6 @@ export default function RecurrenciesPageClient({
     // Create action wrapper
     const createAction = async (state: TransactionTemplateActionState | undefined, formData: FormData) => {
         return await createTransactionTemplate(workspaceId, state, formData);
-    };
-
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    };
-
-    const formatDate = (date: string | Date) => {
-        return new Date(date).toLocaleDateString('pt-BR');
     };
 
     return (
@@ -155,10 +144,6 @@ function RecurrencyItem({
         }).format(value);
     };
 
-    const formatDate = (date: string | Date) => {
-        return new Date(date).toLocaleDateString('pt-BR');
-    };
-
     const category = template.category;
     const isIncome = category?.type === CATEGORY_TYPES.INCOME;
     const amountColor = isIncome ? "text-emerald-500" : "text-red-500";
@@ -190,7 +175,7 @@ function RecurrencyItem({
                     {template.frequency && (
                         <span>{FREQUENCY_LABELS[template.frequency as keyof typeof FREQUENCY_LABELS]}</span>
                     )}
-                    <span>{formatDate(template.startDate)}</span>
+                    <DateDisplay date={template.startDate} />
                 </div>
             </div>
             {canManage && (

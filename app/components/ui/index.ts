@@ -15,3 +15,6 @@ export { CodeInput } from "./CodeInput";
 export { Alert } from "./Alert";
 
 export { Modal } from "./Modal";
+
+export { DateDisplay } from "./DateDisplay";
+export type { DateDisplayProps } from "./DateDisplay";
