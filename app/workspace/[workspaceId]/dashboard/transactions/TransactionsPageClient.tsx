@@ -4,6 +4,7 @@ import { useState, useActionState, useEffect } from "react";
 import { Button, DateDisplay } from "@/app/components/ui";
 import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
+import { FilterPopover } from "@/app/components/FilterPopover";
 import { deleteTransaction, createTransaction, updateTransaction, TransactionActionState } from "@/app/actions/transactions";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
 import { Modal } from "@/app/components/ui/Modal";
@@ -33,6 +34,10 @@ interface TransactionsPageClientProps {
     workspaceId: string;
     currentUserId: string;
     isWorkspaceOwner: boolean;
+    defaultDateRange?: {
+        startDate: string;
+        endDate: string;
+    };
 }
 
 export default function TransactionsPageClient({
@@ -41,6 +46,7 @@ export default function TransactionsPageClient({
     workspaceId,
     currentUserId,
     isWorkspaceOwner,
+    defaultDateRange,
 }: TransactionsPageClientProps) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -56,10 +62,16 @@ export default function TransactionsPageClient({
                     <h1 className="text-2xl font-bold">Transações</h1>
                     <p className="text-muted">Gerencie suas transações</p>
                 </div>
-                <Button onClick={() => setIsCreateOpen(true)}>
-                    <AiOutlinePlus className="mr-2" />
-                    Nova Transação
-                </Button>
+                <div className="flex items-center gap-2">
+                    <FilterPopover defaultValues={defaultDateRange}>
+                        <FilterPopover.Title>Filtros</FilterPopover.Title>
+                        <FilterPopover.StartDate />
+                    </FilterPopover>
+                    <Button onClick={() => setIsCreateOpen(true)}>
+                        <AiOutlinePlus className="mr-2" />
+                        Nova Transação
+                    </Button>
+                </div>
             </div>
 
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
@@ -238,5 +250,6 @@ function TransactionItem({
         </div>
     );
 }
+
 
 

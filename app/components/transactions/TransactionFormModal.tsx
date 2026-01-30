@@ -3,6 +3,7 @@
 import { useState, useEffect, useActionState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
+import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionActionState } from "@/app/actions/transactions";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
 
@@ -23,11 +24,19 @@ interface Transaction {
     paidAt: string | null;
 }
 
+interface TransactionTemplate {
+    id: string;
+    description: string;
+    baseAmount: number;
+    categoryId: string | null;
+}
+
 interface TransactionFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     transactionToEdit?: Transaction | null;
     categories: Category[];
+    recurrencies?: TransactionTemplate[];
     action: (state: TransactionActionState | undefined, payload: FormData) => Promise<TransactionActionState>;
 }
 
@@ -36,6 +45,7 @@ export function TransactionFormModal({
     onClose,
     transactionToEdit,
     categories,
+    recurrencies,
     action,
 }: TransactionFormModalProps) {
     if (!isOpen) return null;
@@ -46,6 +56,7 @@ export function TransactionFormModal({
             onClose={onClose}
             transactionToEdit={transactionToEdit}
             categories={categories}
+            recurrencies={recurrencies}
             action={action}
         />
     );
@@ -56,11 +67,15 @@ function TransactionFormModalContent({
     onClose,
     transactionToEdit,
     categories,
+    recurrencies,
     action,
 }: TransactionFormModalProps) {
     const [state, formAction, pending] = useActionState(action, undefined);
 
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+    const [selectedRecurrencyId, setSelectedRecurrencyId] = useState<string>("");
+    const [description, setDescription] = useState<string>("");
+    const [amount, setAmount] = useState<string>("");
     const [isPaid, setIsPaid] = useState<boolean>(false);
     const [date, setDate] = useState<string>("");
     const [paidAt, setPaidAt] = useState<string>("");
@@ -68,6 +83,8 @@ function TransactionFormModalContent({
     useEffect(() => {
         if (transactionToEdit) {
             setSelectedCategoryId(transactionToEdit.categoryId || "");
+            setDescription(transactionToEdit.description);
+            setAmount(transactionToEdit.amount.toString());
             setIsPaid(transactionToEdit.isPaid);
             // Format date for input (YYYY-MM-DD)
             const transactionDate = new Date(transactionToEdit.date);
@@ -80,13 +97,32 @@ function TransactionFormModalContent({
                 setPaidAt("");
             }
         } else {
+            // Reset form when opening for creation (and no recurrency selected yet)
             setSelectedCategoryId("");
+            setDescription("");
+            setAmount("");
             setIsPaid(false);
             // Default to today
             setDate(new Date().toISOString().split('T')[0]);
             setPaidAt("");
+            // Reset recurrency selection if opening fresh
+            if (isOpen) setSelectedRecurrencyId("");
         }
     }, [transactionToEdit, isOpen]);
+
+    // Handle recurrency selection
+    const handleRecurrencyChange = (recurrencyId: string) => {
+        setSelectedRecurrencyId(recurrencyId);
+        if (!recurrencyId) return;
+
+        const recurrency = recurrencies?.find(r => r.id === recurrencyId);
+        if (recurrency) {
+            // Update form fields
+            setDescription(recurrency.description);
+            setAmount(recurrency.baseAmount.toString());
+            setSelectedCategoryId(recurrency.categoryId || "");
+        }
+    };
 
     useEffect(() => {
         if (state?.success) {
@@ -105,6 +141,25 @@ function TransactionFormModalContent({
                 className="flex flex-col gap-4"
             >
                 <div className="flex flex-col gap-8">
+                    {/* Recurrency Selector - Only show for new transactions */}
+                    {!transactionToEdit && recurrencies && recurrencies.length > 0 && (
+                        <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
+                            <Select
+                                label="Preencher com Recorrência (Opcional)"
+                                name="recurrencyId"
+                                id="recurrencyId"
+                                value={selectedRecurrencyId}
+                                onChange={(e) => handleRecurrencyChange(e.target.value as string)}
+                                options={[
+                                    { value: "", label: "Criar em branco" },
+                                    ...recurrencies.map((r) => ({
+                                        value: r.id,
+                                        label: `${r.description} - R$ ${r.baseAmount}`
+                                    }))
+                                ]}
+                            />
+                        </div>
+                    )}
                     {/* Hidden Inputs for controlled states */}
                     <input type="hidden" name="categoryId" value={selectedCategoryId} />
                     <input type="hidden" name="isPaid" value={isPaid ? "true" : "false"} />
@@ -116,7 +171,8 @@ function TransactionFormModalContent({
                         name="description"
                         id="description"
                         label="Descrição"
-                        defaultValue={transactionToEdit?.description}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                         placeholder="Ex: Salário, Aluguel..."
                         required
                         error={state?.errors?.description?.[0]}
@@ -129,7 +185,8 @@ function TransactionFormModalContent({
                         label="Valor"
                         step="0.01"
                         min="0"
-                        defaultValue={transactionToEdit?.amount?.toString()}
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
                         required
                         error={state?.errors?.amount?.[0]}
@@ -152,16 +209,17 @@ function TransactionFormModalContent({
                         error={state?.errors?.categoryId?.[0]}
                     />
 
-                    <Input
-                        type="date"
-                        name="date"
-                        id="date"
-                        label="Data"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        required
-                        error={state?.errors?.date?.[0]}
-                    />
+                    <div>
+                        <DatePicker
+                            value={date}
+                            onChange={setDate}
+                            label="Data"
+                            required
+                            error={!!state?.errors?.date?.[0]}
+                            helperText={state?.errors?.date?.[0]}
+                        />
+                        <input type="hidden" name="date" value={date} />
+                    </div>
 
                     <Checkbox
                         name="isPaid"
@@ -172,15 +230,16 @@ function TransactionFormModalContent({
                     />
 
                     {isPaid && (
-                        <Input
-                            type="date"
-                            name="paidAt"
-                            id="paidAt"
-                            label="Data de Pagamento"
-                            value={paidAt}
-                            onChange={(e) => setPaidAt(e.target.value)}
-                            error={state?.errors?.paidAt?.[0]}
-                        />
+                        <div>
+                            <DatePicker
+                                value={paidAt}
+                                onChange={setPaidAt}
+                                label="Data de Pagamento"
+                                error={!!state?.errors?.paidAt?.[0]}
+                                helperText={state?.errors?.paidAt?.[0]}
+                            />
+                            <input type="hidden" name="paidAt" value={paidAt || ""} />
+                        </div>
                     )}
                 </div>
 

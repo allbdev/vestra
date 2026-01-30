@@ -35,6 +35,36 @@ export interface TransactionActionState {
     data?: any;
 }
 
+function serializeTransaction(transaction: any) {
+    return {
+        id: transaction.id,
+        workspaceId: transaction.workspaceId,
+        ownerId: transaction.ownerId,
+        categoryId: transaction.categoryId,
+        templateId: transaction.templateId,
+        description: transaction.description,
+        amount: Number(transaction.amount),
+        date: transaction.date.toISOString(),
+        isPaid: transaction.isPaid,
+        paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
+        createdAt: transaction.createdAt.toISOString(),
+        updatedAt: transaction.updatedAt.toISOString(),
+        deletedAt: transaction.deletedAt ? transaction.deletedAt.toISOString() : null,
+        category: transaction.category ? {
+            id: transaction.category.id,
+            workspaceId: transaction.category.workspaceId,
+            ownerId: transaction.category.ownerId,
+            name: transaction.category.name,
+            type: transaction.category.type,
+            color: transaction.category.color,
+            createdAt: transaction.category.createdAt.toISOString(),
+            updatedAt: transaction.category.updatedAt.toISOString(),
+            deletedAt: transaction.category.deletedAt ? transaction.category.deletedAt.toISOString() : null,
+        } : null,
+    };
+}
+
+
 export async function createTransaction(
     workspaceId: string,
     _prevState: TransactionActionState | undefined,
@@ -116,7 +146,8 @@ export async function createTransaction(
         });
 
         revalidatePath(`/workspace/${workspaceId}/dashboard/transactions`);
-        return { success: true, data: transaction };
+        revalidatePath(`/workspace/${workspaceId}/dashboard/transactions`);
+        return { success: true, data: serializeTransaction(transaction) };
     } catch (error) {
         console.error("Error creating transaction:", error);
         return { errors: { _form: ["Erro ao criar transação"] } };
@@ -260,50 +291,48 @@ export async function deleteTransaction(
     }
 }
 
-export async function getTransactions(workspaceId: string) {
+export async function getTransactions(
+    workspaceId: string,
+    startDate?: string,
+    endDate?: string
+) {
     const user = await verifySession();
     if (!user) return [];
 
+    const where: any = {
+        workspaceId,
+        deletedAt: null,
+    };
+
+    if (startDate && endDate) {
+        where.date = {
+            gte: new Date(startDate),
+            lte: new Date(endDate),
+        };
+    } else if (startDate) {
+        where.date = {
+            gte: new Date(startDate),
+        };
+    } else if (endDate) {
+        where.date = {
+            lte: new Date(endDate),
+        };
+    }
+
     try {
         const transactions = await prisma.transaction.findMany({
-            where: {
-                workspaceId,
-                deletedAt: null,
-            },
+            where,
             include: {
                 category: true,
             },
             orderBy: { date: "desc" },
         });
-        
+
         // Convert Decimal to number and Date to string for client components
         // Explicitly map all fields to avoid passing Prisma objects
-        return transactions.map(transaction => ({
-            id: transaction.id,
-            workspaceId: transaction.workspaceId,
-            ownerId: transaction.ownerId,
-            categoryId: transaction.categoryId,
-            templateId: transaction.templateId,
-            description: transaction.description,
-            amount: Number(transaction.amount),
-            date: transaction.date.toISOString(),
-            isPaid: transaction.isPaid,
-            paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
-            createdAt: transaction.createdAt.toISOString(),
-            updatedAt: transaction.updatedAt.toISOString(),
-            deletedAt: transaction.deletedAt ? transaction.deletedAt.toISOString() : null,
-            category: transaction.category ? {
-                id: transaction.category.id,
-                workspaceId: transaction.category.workspaceId,
-                ownerId: transaction.category.ownerId,
-                name: transaction.category.name,
-                type: transaction.category.type,
-                color: transaction.category.color,
-                createdAt: transaction.category.createdAt.toISOString(),
-                updatedAt: transaction.category.updatedAt.toISOString(),
-                deletedAt: transaction.category.deletedAt ? transaction.category.deletedAt.toISOString() : null,
-            } : null,
-        }));
+        // Convert Decimal to number and Date to string for client components
+        // Explicitly map all fields to avoid passing Prisma objects
+        return transactions.map(serializeTransaction);
     } catch (error) {
         console.error("Error fetching transactions:", error);
         return [];
@@ -328,32 +357,9 @@ export async function getTransaction(transactionId: string) {
 
         // Convert Decimal to number and Date to string for client components
         // Explicitly map all fields to avoid passing Prisma objects
-        return {
-            id: transaction.id,
-            workspaceId: transaction.workspaceId,
-            ownerId: transaction.ownerId,
-            categoryId: transaction.categoryId,
-            templateId: transaction.templateId,
-            description: transaction.description,
-            amount: Number(transaction.amount),
-            date: transaction.date.toISOString(),
-            isPaid: transaction.isPaid,
-            paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
-            createdAt: transaction.createdAt.toISOString(),
-            updatedAt: transaction.updatedAt.toISOString(),
-            deletedAt: transaction.deletedAt ? transaction.deletedAt.toISOString() : null,
-            category: transaction.category ? {
-                id: transaction.category.id,
-                workspaceId: transaction.category.workspaceId,
-                ownerId: transaction.category.ownerId,
-                name: transaction.category.name,
-                type: transaction.category.type,
-                color: transaction.category.color,
-                createdAt: transaction.category.createdAt.toISOString(),
-                updatedAt: transaction.category.updatedAt.toISOString(),
-                deletedAt: transaction.category.deletedAt ? transaction.category.deletedAt.toISOString() : null,
-            } : null,
-        };
+        // Convert Decimal to number and Date to string for client components
+        // Explicitly map all fields to avoid passing Prisma objects
+        return serializeTransaction(transaction);
     } catch (error) {
         console.error("Error fetching transaction:", error);
         return null;

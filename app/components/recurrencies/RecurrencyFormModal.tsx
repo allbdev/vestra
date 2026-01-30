@@ -3,6 +3,7 @@
 import { useState, useEffect, useActionState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
+import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionTemplateActionState } from "@/app/actions/transaction-templates";
 import { FREQUENCY_TYPES, CATEGORY_TYPES } from "@/app/lib/consts";
 
@@ -35,7 +36,6 @@ const FREQUENCY_LABELS = {
     [FREQUENCY_TYPES.DAILY]: "Diária",
     [FREQUENCY_TYPES.WEEKLY]: "Semanal",
     [FREQUENCY_TYPES.MONTHLY]: "Mensal",
-    [FREQUENCY_TYPES.YEARLY]: "Anual",
 };
 
 export function RecurrencyFormModal({
@@ -107,9 +107,7 @@ function RecurrencyFormModalContent({
             >
                 <div className="flex flex-col gap-8">
                     {/* Hidden Inputs for controlled states */}
-                    <input type="hidden" name="categoryId" value={selectedCategoryId} />
-                    <input type="hidden" name="frequency" value={selectedFrequency || ""} />
-                    <input type="hidden" name="active" value={isActive ? "true" : "false"} />
+
 
                     <Input
                         autoFocus
@@ -166,16 +164,18 @@ function RecurrencyFormModalContent({
                         error={state?.errors?.frequency?.[0]}
                     />
 
-                    <Input
-                        type="date"
-                        name="startDate"
-                        id="startDate"
-                        label="Data de Início"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        required
-                        error={state?.errors?.startDate?.[0]}
-                    />
+                    <div>
+                        <DatePicker
+                            value={startDate}
+                            onChange={setStartDate}
+                            label="Data de Início"
+                            required
+
+                            error={!!state?.errors?.startDate?.[0]}
+                            helperText={state?.errors?.startDate?.[0]}
+                        />
+                        <input type="hidden" name="startDate" value={startDate} />
+                    </div>
 
                     <Checkbox
                         name="active"
