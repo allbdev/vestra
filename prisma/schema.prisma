@@ -175,3 +175,14 @@ model Transaction {
   @@index([date])
   @@map("transactions")
 }
+
+model Message {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  name      String   @db.VarChar(255)
+  email     String   @db.VarChar(255)
+  phone     String?  @db.VarChar(50)
+  message   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("messages")
+}

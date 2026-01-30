@@ -132,7 +132,7 @@ export async function login(
   redirect("/workspace");
 }
 
-export async function logout(): Promise<void> {
+export async function logout({ shouldRedirect = true }: { shouldRedirect?: boolean } = {}): Promise<void> {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("sessionToken")?.value;
 
@@ -146,7 +146,9 @@ export async function logout(): Promise<void> {
   // Clear session cookie
   await clearSessionToken();
 
-  redirect("/login");
+  if (shouldRedirect) {
+    redirect("/login");
+  }
 }
 
 export interface RegisterFormState {
@@ -262,7 +264,7 @@ export async function register(
       // @ts-expect-error - using global for demo purposes
       global.pendingRegistrations = new Map();
     }
-    
+
     // @ts-expect-error - using global for demo purposes
     global.pendingRegistrations.set(email.toLowerCase(), {
       name,
