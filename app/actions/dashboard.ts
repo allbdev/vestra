@@ -35,6 +35,7 @@ export interface PeriodData {
     }>;
   };
   net: number;
+  accumulatedNet: number;
 }
 
 export interface DashboardData {
@@ -46,6 +47,7 @@ export interface DashboardData {
     } | null;
     incoming: number;
     outcome: number;
+    balance: number;
   };
   periods: PeriodData[];
 }
@@ -60,25 +62,25 @@ function getISOWeek(date: Date): { year: number; week: number } {
 
 function getPeriodKey(date: Date, periodType: number): string {
   const year = date.getUTCFullYear();
-  
+
   switch (periodType) {
     case FREQUENCY_TYPES.DAILY:
       const day = String(date.getUTCDate()).padStart(2, "0");
       const dailyMonth = String(date.getUTCMonth() + 1).padStart(2, "0");
       return `${year}-${dailyMonth}-${day}`;
-    
+
     case FREQUENCY_TYPES.WEEKLY:
       // Get ISO week
       const { year: weekYear, week } = getISOWeek(date);
       return `${weekYear}-W${String(week).padStart(2, "0")}`;
-    
+
     case FREQUENCY_TYPES.MONTHLY:
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       return `${year}-${month}`;
-    
+
     case FREQUENCY_TYPES.YEARLY:
       return `${year}`;
-    
+
     default:
       const defaultMonth = String(date.getUTCMonth() + 1).padStart(2, "0");
       return `${year}-${defaultMonth}`;
@@ -90,10 +92,10 @@ function getPeriodLabel(periodKey: string, periodType: number): string {
     case FREQUENCY_TYPES.DAILY:
       const [year, month, day] = periodKey.split("-");
       return `${day}/${month}/${year}`;
-    
+
     case FREQUENCY_TYPES.WEEKLY:
       return `Semana ${periodKey.split("-W")[1]}`;
-    
+
     case FREQUENCY_TYPES.MONTHLY:
       const [y, m] = periodKey.split("-");
       const monthNames = [
@@ -101,10 +103,10 @@ function getPeriodLabel(periodKey: string, periodType: number): string {
         "Jul", "Ago", "Set", "Out", "Nov", "Dez"
       ];
       return monthNames[parseInt(m) - 1] || m;
-    
+
     case FREQUENCY_TYPES.YEARLY:
       return periodKey;
-    
+
     default:
       const [y2, m2] = periodKey.split("-");
       const monthNames2 = [
@@ -125,7 +127,7 @@ function generateAllPeriods(
 
   while (current <= end) {
     const periodKey = getPeriodKey(current, periodType);
-    
+
     if (!periodMap.has(periodKey)) {
       periodMap.set(periodKey, {
         periodKey,
@@ -139,6 +141,7 @@ function generateAllPeriods(
           byTransaction: [],
         },
         net: 0,
+        accumulatedNet: 0,
       });
     }
 
@@ -212,7 +215,7 @@ export async function getDashboardData(
     for (const transaction of transactions) {
       const transactionDate = new Date(transaction.date);
       const periodKey = getPeriodKey(transactionDate, periodType);
-      
+
       // Period should already exist, but create if missing (safety check)
       if (!periodMap.has(periodKey)) {
         periodMap.set(periodKey, {
@@ -227,6 +230,7 @@ export async function getDashboardData(
             byTransaction: [],
           },
           net: 0,
+          accumulatedNet: 0,
         });
       }
 
@@ -271,6 +275,18 @@ export async function getDashboardData(
       period.net = period.incoming.total - period.outcome.total;
     }
 
+    // Sort periods by periodKey
+    const sortedPeriods = Array.from(periodMap.values()).sort((a, b) => {
+      return a.periodKey.localeCompare(b.periodKey);
+    });
+
+    // Calculate accumulated net
+    let accumulatedNet = 0;
+    for (const period of sortedPeriods) {
+      accumulatedNet += period.net;
+      period.accumulatedNet = accumulatedNet;
+    }
+
     // Find best period (highest net)
     for (const period of periodMap.values()) {
       if (!bestPeriod || period.net > bestPeriod.net) {
@@ -282,16 +298,14 @@ export async function getDashboardData(
       }
     }
 
-    // Sort periods by periodKey
-    const sortedPeriods = Array.from(periodMap.values()).sort((a, b) => {
-      return a.periodKey.localeCompare(b.periodKey);
-    });
+
 
     return {
       kpis: {
         bestPeriod,
         incoming: totalIncoming,
         outcome: totalOutcome,
+        balance: totalIncoming - totalOutcome,
       },
       periods: sortedPeriods,
     };

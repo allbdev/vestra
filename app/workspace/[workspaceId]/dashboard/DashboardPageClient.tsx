@@ -5,6 +5,7 @@ import { useDashboard } from "@/app/hooks/useDashboard";
 import { FilterPopover } from "@/app/components/FilterPopover";
 import { KPICard } from "@/app/components/dashboard/KPICard";
 import { DashboardLineChart } from "@/app/components/dashboard/DashboardLineChart";
+import { DashboardBarChart } from "@/app/components/dashboard/DashboardBarChart";
 import { PeriodTransactionsView } from "@/app/components/dashboard/PeriodTransactionsView";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
 import { Button } from "@/app/components/ui";
@@ -101,7 +102,10 @@ export function DashboardPageClient({
 
       {/* KPIs */}
       {isLoading ? (
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
+            Carregando...
+          </div>
           <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
             Carregando...
           </div>
@@ -113,7 +117,7 @@ export function DashboardPageClient({
           </div>
         </section>
       ) : dashboardData ? (
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             title={getPeriodLabel(periodType)}
             value={
@@ -135,6 +139,10 @@ export function DashboardPageClient({
             title="Saídas"
             value={dashboardData.kpis.outcome}
           />
+          <KPICard
+            title="Saldo do Período"
+            value={dashboardData.kpis.balance}
+          />
         </section>
       ) : (
         <section className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
@@ -144,11 +152,19 @@ export function DashboardPageClient({
 
       {/* Chart */}
       {isLoading ? (
-        <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
-          Carregando gráfico...
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
+            Carregando gráfico...
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
+            Carregando gráfico...
+          </div>
         </div>
       ) : (
-        <DashboardLineChart periods={dashboardData?.periods || []} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DashboardLineChart periods={dashboardData?.periods || []} />
+          <DashboardBarChart periods={dashboardData?.periods || []} />
+        </div>
       )}
 
       {/* Transactions Table */}
