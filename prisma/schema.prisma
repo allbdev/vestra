@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 model User {
@@ -110,7 +110,7 @@ model Category {
   workspaceId          String                @map("workspace_id") @db.VarChar(36)
   ownerId              String                @map("owner_id") @db.VarChar(36)
   name                 String                @db.VarChar(100)
-  type                 Int                   @db.Int // 1=Income, 2=Expense
+  type                 Int // 1=Income, 2=Expense
   color                String?               @db.VarChar(7)
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
@@ -132,7 +132,7 @@ model TransactionTemplate {
   categoryId   String?       @map("category_id") @db.VarChar(36)
   description  String        @db.VarChar(255)
   baseAmount   Decimal       @map("base_amount") @db.Decimal(15, 2)
-  frequency    Int?          @db.Int // 1=Daily, 2=Weekly, 3=Monthly, 4=Yearly
+  frequency    Int? // 1=Daily, 2=Weekly, 3=Monthly, 4=Yearly
   startDate    DateTime      @map("start_date") @db.Date
   active       Boolean       @default(true)
   createdAt    DateTime      @default(now()) @map("created_at")

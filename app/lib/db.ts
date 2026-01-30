@@ -1,5 +1,5 @@
-import "dotenv/config";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/app/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -7,16 +7,14 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaMariaDb({
-    host: process.env.DATABASE_HOST || "localhost",
-    port: parseInt(process.env.DATABASE_PORT || "3306"),
-    user: process.env.DATABASE_USER || "root",
-    password: process.env.DATABASE_PASSWORD || "password",
-    database: process.env.DATABASE_NAME || "vestra",
-    connectionLimit: 10,
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10, // Default connection limit
   });
 
-  return new PrismaClient({ 
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
