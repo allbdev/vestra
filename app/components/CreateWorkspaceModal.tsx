@@ -22,7 +22,7 @@ export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalPr
       title="Criar Workspace"
       description="Crie um novo workspace para gerenciar suas finanças"
     >
-      <form action={action} className="space-y-4">
+      <form action={action} className="flex flex-col gap-4">
         <Input
           label="Nome do Workspace"
           name="name"

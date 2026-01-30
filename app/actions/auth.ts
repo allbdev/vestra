@@ -383,13 +383,25 @@ export async function confirm(
     }
 
     // Create the user
-    await db.user.create({
+    const newUser = await db.user.create({
       data: {
         name: pendingData.name,
         email: normalizedEmail,
         password: pendingData.hashedPassword,
       },
     });
+
+    // Assign free plan
+    const freePlan = await db.plan.findUnique({ where: { name: "free" } });
+
+    if (freePlan) {
+      await db.userPlan.create({
+        data: {
+          userId: newUser.id,
+          planId: freePlan.id,
+        },
+      });
+    }
 
     // Clean up confirmation code and pending data
     await db.confirmationCode.delete({

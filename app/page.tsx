@@ -137,7 +137,7 @@ export default async function Home() {
               href="/register"
               features={[
                 { name: "1 Workspace", included: true },
-                { name: "1 Usuário", included: true },
+                { name: "2 Usuários por Workspace", included: true },
                 { name: "Dashboard Básico", included: true },
                 { name: "Transações Ilimitadas", included: true },
                 { name: "Gestão de Cartões", included: false },
@@ -151,9 +151,10 @@ export default async function Home() {
               buttonText="Assinar Pro"
               isPopular
               comingSoon
+              link="#contato"
               features={[
                 { name: "Workspaces Ilimitados", included: true },
-                { name: "Usuários Ilimitados", included: true },
+                { name: "Usuários Ilimitados por Workspace", included: true },
                 { name: "Dashboard Avançado", included: true },
                 { name: "Transações Ilimitadas", included: true },
                 { name: "Gestão de Cartões", included: true },

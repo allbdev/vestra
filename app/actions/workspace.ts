@@ -7,6 +7,7 @@ import { db } from "@/app/lib/db";
 import { sendWorkspaceInviteEmail } from "@/app/lib/email";
 import { cookies } from "next/headers";
 import { storageKeys } from "../lib/consts";
+import { checkWorkspaceLimit, checkInviteLimit } from "@/app/lib/subscription";
 
 export interface WorkspaceFormState {
   errors?: {
@@ -18,6 +19,7 @@ export interface WorkspaceFormState {
     id: string;
     name: string;
   };
+  limitReached?: boolean;
 }
 
 export async function createWorkspace(
@@ -50,6 +52,17 @@ export async function createWorkspace(
       errors: {
         name: ["Nome deve ter no máximo 255 caracteres"],
       },
+    };
+  }
+
+  // Check subscription limit
+  const limitCheck = await checkWorkspaceLimit(user.id);
+  if (!limitCheck.allowed) {
+    return {
+      errors: {
+        _form: ["Limite de workspaces atingido. Faça o upgrade para o plano Pro."],
+      },
+      limitReached: true,
     };
   }
 
@@ -123,6 +136,17 @@ export async function inviteUser(
         error: "Workspace não encontrado ou sem permissão",
       };
     }
+
+    // Check subscription limit for invites
+    const limitCheck = await checkInviteLimit(workspaceId, user.id);
+    if (!limitCheck.allowed) {
+      return {
+        success: false,
+        error: "Limite de usuários no workspace atingido. Faça o upgrade para o plano Pro.", // Special code for frontend to handle
+      };
+    }
+
+
 
     // Check if user to invite exists
     const userToInvite = await db.user.findUnique({

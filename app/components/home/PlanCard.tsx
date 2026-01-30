@@ -35,9 +35,10 @@ interface PlanCardProps {
     buttonText: string;
     href?: string;
     comingSoon?: boolean;
+    link?: string;
 }
 
-export function PlanCard({ name, price, description, features, isPopular, buttonText, href, comingSoon }: PlanCardProps) {
+export function PlanCard({ name, price, description, features, isPopular, buttonText, href, comingSoon, link }: PlanCardProps) {
     return (
         <div className={`relative bg-card border rounded-2xl p-8 flex flex-col h-full transition-all duration-300 ${isPopular ? "border-primary shadow-lg shadow-primary/10 scale-105 z-10" : "border-border hover:border-primary/50"}`}>
             {isPopular && (
@@ -74,10 +75,14 @@ export function PlanCard({ name, price, description, features, isPopular, button
                     variant={isPopular ? "primary" : "secondary"}
                     fullWidth
                     size="lg"
-                    disabled={comingSoon}
+                    disabled={comingSoon && !link}
                 >
                     {comingSoon ? (
-                        "Entrar na Lista de Espera"
+                        link ? (
+                            <Link href={link}>Entrar na Lista de Espera</Link>
+                        ) : (
+                            "Entrar na Lista de Espera"
+                        )
                     ) : href ? (
                         <Link href={href}>{buttonText}</Link>
                     ) : (

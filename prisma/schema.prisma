@@ -28,6 +28,7 @@ model User {
   ownedCategories           Category[]
   ownedTransactionTemplates TransactionTemplate[]
   ownedTransactions         Transaction[]
+  userPlans                 UserPlan[]
 
   @@map("users")
 }
@@ -185,4 +186,32 @@ model Message {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("messages")
+}
+
+model Plan {
+  id        String     @id @default(uuid()) @db.VarChar(36)
+  name      String     @unique @db.VarChar(50)
+  price     Decimal    @db.Decimal(10, 2)
+  isDefault Boolean    @default(false) @map("is_default")
+  createdAt DateTime   @default(now()) @map("created_at")
+  userPlans UserPlan[]
+
+  @@map("plans")
+}
+
+model UserPlan {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  userId    String    @map("user_id") @db.VarChar(36)
+  planId    String    @map("plan_id") @db.VarChar(36)
+  startDate DateTime  @default(now()) @map("start_date")
+  endDate   DateTime? @map("end_date")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([planId])
+  @@map("user_plans")
 }

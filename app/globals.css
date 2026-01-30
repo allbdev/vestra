@@ -38,6 +38,10 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Custom animations */
 @keyframes float {
 

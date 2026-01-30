@@ -62,7 +62,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <BackgroundEffects />
-      
+
       <div className="w-full max-w-md relative z-10">
         {/* Logo & Header */}
         <div className="text-center mb-8 animate-fade-in">
@@ -80,9 +80,8 @@ export default function RegisterPage() {
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className={`flex items-center gap-2 ${step === "register" ? "text-foreground" : "text-muted"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                step === "register" ? "bg-primary text-background" : "bg-primary/20 text-primary"
-              }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${step === "register" ? "bg-primary text-background" : "bg-primary/20 text-primary"
+                }`}>
                 {step === "confirm" ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -93,9 +92,8 @@ export default function RegisterPage() {
             </div>
             <div className={`w-12 h-0.5 rounded ${step === "confirm" ? "bg-primary" : "bg-border"}`} />
             <div className={`flex items-center gap-2 ${step === "confirm" ? "text-foreground" : "text-muted"}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                step === "confirm" ? "bg-primary text-background" : "bg-card-hover border border-border"
-              }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${step === "confirm" ? "bg-primary text-background" : "bg-card-hover border border-border"
+                }`}>
                 2
               </div>
               <span className="text-sm font-medium hidden sm:inline">Verificar</span>
@@ -103,7 +101,7 @@ export default function RegisterPage() {
           </div>
 
           {step === "register" ? (
-            <form action={registerAction} className="space-y-5">
+            <form action={registerAction} className="flex flex-col gap-4">
               <Input
                 label="Nome Completo"
                 name="name"

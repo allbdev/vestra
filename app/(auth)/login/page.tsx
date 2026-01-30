@@ -12,7 +12,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <BackgroundEffects />
-      
+
       <div className="w-full max-w-md relative z-10">
         {/* Logo & Header */}
         <div className="text-center mb-8 animate-fade-in">
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl shadow-black/20 animate-slide-up">
-          <form action={action} className="space-y-5">
+          <form action={action} className="flex flex-col gap-4">
             <Input
               label="E-mail"
               type="email"

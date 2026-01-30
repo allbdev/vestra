@@ -69,7 +69,7 @@ export function InviteUserModal({
       title="Convidar Usuário"
       description="Envie um convite por e-mail para adicionar um usuário ao workspace"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input
           label="E-mail"
           type="email"
