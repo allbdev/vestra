@@ -101,7 +101,8 @@ function getPeriodLabel(periodKey: string, periodType: number): string {
       return `${day}/${month}/${year}`;
 
     case FREQUENCY_TYPES.WEEKLY:
-      return `Semana ${periodKey.split("-W")[1]}`;
+      const [wYear, wWeek] = periodKey.split("-W");
+      return `Semana ${wWeek}/${wYear}`;
 
     case FREQUENCY_TYPES.MONTHLY:
       const [y, m] = periodKey.split("-");
@@ -109,7 +110,7 @@ function getPeriodLabel(periodKey: string, periodType: number): string {
         "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
         "Jul", "Ago", "Set", "Out", "Nov", "Dez"
       ];
-      return monthNames[parseInt(m) - 1] || m;
+      return `${monthNames[parseInt(m) - 1] || m}/${y}`;
 
     case FREQUENCY_TYPES.YEARLY:
       return periodKey;
@@ -120,7 +121,7 @@ function getPeriodLabel(periodKey: string, periodType: number): string {
         "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
         "Jul", "Ago", "Set", "Out", "Nov", "Dez"
       ];
-      return monthNames2[parseInt(m2) - 1] || m2;
+      return `${monthNames2[parseInt(m2) - 1] || m2}/${y2}`;
   }
 }
 

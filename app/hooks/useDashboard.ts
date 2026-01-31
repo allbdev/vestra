@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { getDashboardData, DashboardData } from "@/app/actions/dashboard";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
 
 import { getDefaultDateRange } from "@/app/lib/date";
 
 export function useDashboard(workspaceId: string, initialData: DashboardData | null) {
-    const router = useRouter();
     const searchParams = useSearchParams();
-    const pathname = usePathname();
     const defaultDates = getDefaultDateRange();
 
     // Derived state from URL or defaults
