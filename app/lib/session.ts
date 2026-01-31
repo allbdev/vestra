@@ -44,12 +44,13 @@ export async function clearSessionToken(): Promise<void> {
  * This is for use in Server Components and Server Actions
  */
 export async function verifySession(): Promise<AuthenticatedUser | null> {
-  try {
-    const sessionToken = await getSessionToken();
+  const sessionToken = await getSessionToken();
 
-    if (!sessionToken) {
-      return null;
-    }
+  if (!sessionToken) {
+    return null;
+  }
+
+  try {
 
     // Find session in database
     const session = await db.session.findUnique({
@@ -116,7 +117,7 @@ export interface UserWithWorkspaces extends AuthenticatedUser {
 
 export async function getUserWithWorkspaces(): Promise<UserWithWorkspaces | null> {
   const user = await verifySession();
-  
+
   if (!user) {
     return null;
   }
