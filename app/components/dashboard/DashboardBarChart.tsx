@@ -9,7 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer,
     Legend,
-    Rectangle,
+    Rectangle
 } from "recharts";
 import { PeriodData } from "@/app/actions/dashboard";
 
@@ -17,14 +17,7 @@ interface DashboardBarChartProps {
     periods: PeriodData[];
 }
 
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(value);
-}
+import { formatCurrency } from "@/app/lib/utils";
 
 const CustomTooltip = ({
     active,

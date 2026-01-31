@@ -9,6 +9,7 @@ import { deleteTransaction, createTransaction, updateTransaction, TransactionAct
 import { CATEGORY_TYPES } from "@/app/lib/consts";
 import { Modal } from "@/app/components/ui/Modal";
 import { StatusBadge } from "@/app/components/transactions/StatusBadge";
+import { formatCurrency } from "@/app/lib/utils";
 
 interface Category {
     id: string;
@@ -158,12 +159,7 @@ function TransactionItem({
         }
     }, [deleteState?.success]);
 
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value);
-    };
+
 
     const category = transaction.category;
     const isIncome = category?.type === CATEGORY_TYPES.INCOME;

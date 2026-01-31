@@ -8,13 +8,12 @@ interface MoneyInputProps extends Omit<InputProps, "onChange" | "value"> {
     onChange: (value: string) => void; // Returns raw string value (e.g. "123.45")
 }
 
+import { formatCurrency } from "@/app/lib/utils";
+
 // Format the display value
 const formatDisplay = (val: string | number) => {
     if (!val) return "";
-    return new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(Number(val));
+    return formatCurrency(Number(val));
 };
 
 export function MoneyInput({ value, onChange, ...props }: MoneyInputProps) {

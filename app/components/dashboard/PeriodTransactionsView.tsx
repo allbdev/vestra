@@ -7,12 +7,7 @@ interface PeriodTransactionsViewProps {
   periods: PeriodData[];
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
-}
+import { formatCurrency } from "@/app/lib/utils";
 
 export function PeriodTransactionsView({
   periods,

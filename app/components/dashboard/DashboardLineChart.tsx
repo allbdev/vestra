@@ -11,19 +11,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { PeriodData } from "@/app/actions/dashboard";
+import { formatCurrency } from "@/app/lib/utils";
 
 interface DashboardLineChartProps {
   periods: PeriodData[];
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+
 
 export function DashboardLineChart({ periods }: DashboardLineChartProps) {
   if (periods.length === 0) {
