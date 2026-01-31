@@ -4,6 +4,8 @@ import { BackgroundEffects } from "../components/BackgroundEffects";
 import { verifySession } from "../lib/session";
 import { getSessionSelectedWorkspaceId } from "../actions/workspace";
 
+const LAST_UPDATE = '01-31-2026'
+
 export default async function PrivacyPage() {
     const user = await verifySession();
     const selectedWorkspaceId = await getSessionSelectedWorkspaceId();
@@ -37,6 +39,7 @@ export default async function PrivacyPage() {
                             <ul className="list-disc pl-6 space-y-2 mt-2">
                                 <li><strong>Nome:</strong> Para identificação no sistema e personalização da experiência.</li>
                                 <li><strong>E-mail:</strong> Para login, recuperação de senha e comunicações importantes sobre o serviço.</li>
+                                <li><strong>Telefone:</strong> Como meio de contato.</li>
                             </ul>
                         </section>
 
@@ -102,7 +105,7 @@ export default async function PrivacyPage() {
                         </section>
 
                         <p className="text-sm pt-8 border-t border-border">
-                            Última atualização: {new Date().toLocaleDateString('pt-BR')}
+                            Última atualização: {new Date(LAST_UPDATE).toLocaleDateString('pt-BR')}
                         </p>
                     </div>
                 </div>

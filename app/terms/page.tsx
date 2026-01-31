@@ -4,6 +4,8 @@ import { BackgroundEffects } from "../components/BackgroundEffects";
 import { verifySession } from "../lib/session";
 import { getSessionSelectedWorkspaceId } from "../actions/workspace";
 
+const LAST_UPDATE = '01-31-2026'
+
 export default async function TermsPage() {
     const user = await verifySession();
     const selectedWorkspaceId = await getSessionSelectedWorkspaceId();
@@ -80,7 +82,7 @@ export default async function TermsPage() {
                         </section>
 
                         <p className="text-sm pt-8 border-t border-border">
-                            Última atualização: {new Date().toLocaleDateString('pt-BR')}
+                            Última atualização: {new Date(LAST_UPDATE).toLocaleDateString('pt-BR')}
                         </p>
                     </div>
                 </div>

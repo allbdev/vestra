@@ -9,6 +9,7 @@ import { logout } from "@/app/actions/auth";
 import type { AuthenticatedUser } from "@/app/lib/auth";
 import type { WorkspaceData } from "@/app/lib/workspace-data";
 import { LuMenu, LuX, LuLogOut, LuUser } from "react-icons/lu";
+import { Logo } from "@/app/components/Logo";
 
 interface DashboardLayoutClientProps {
   user: AuthenticatedUser;
@@ -61,14 +62,7 @@ export function DashboardLayoutClient({
     <>
       {!isMobile && (
         <div className="h-16 flex items-center px-6 border-b border-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold">Vestra</span>
-          </div>
+          <Logo iconSize={9} textSize="text-lg" />
         </div>
       )}
 
@@ -154,14 +148,7 @@ export function DashboardLayoutClient({
             {/* Mobile: Logo Left, Menu Right (Wait, requirement: Logo Left, Icon Aside Right) */}
             {/* Req: "The header should have only the Vestra logo/title at the left and a icon to open the aside on the right." */}
 
-            <div className="flex items-center gap-3 md:hidden">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold">Vestra</span>
-            </div>
+            <Logo className="md:hidden" iconSize={9} textSize="text-lg" />
 
             {/* Desktop Header Content (hidden on mobile? No, req says "The header should have only...") */}
             {/* If Mobile: Logo + Menu Button. Desktop: Retweet + User Info */}
@@ -221,14 +208,7 @@ export function DashboardLayoutClient({
       >
         <div className="flex flex-col h-full">
           <div className="h-16 flex items-center justify-between px-6 border-b border-border flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold">Vestra</span>
-            </div>
+            <Logo iconSize={9} textSize="text-lg" />
             <button onClick={() => setIsMobileMenuOpen(false)}>
               <LuX className="w-7 h-7" />
             </button>
