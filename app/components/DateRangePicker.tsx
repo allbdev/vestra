@@ -41,7 +41,7 @@ export function DateRangePicker({
   const endMaxDate = startObj ? startObj.add(364, 'day') : null;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
+    <>
       <div className="flex-1">
         <DatePicker
           value={startDate}
@@ -66,6 +66,6 @@ export function DateRangePicker({
           maxDate={endMaxDate}
         />
       </div>
-    </div>
+    </>
   );
 }

@@ -12,10 +12,6 @@ import {
     Rectangle,
 } from "recharts";
 import { PeriodData } from "@/app/actions/dashboard";
-import {
-    NameType,
-    ValueType,
-} from "recharts/types/component/DefaultTooltipContent";
 
 interface DashboardBarChartProps {
     periods: PeriodData[];

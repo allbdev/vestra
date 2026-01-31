@@ -294,7 +294,11 @@ export async function deleteTransaction(
 export async function getTransactions(
     workspaceId: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    filter?: {
+        categoryIds?: string[];
+        type?: string;
+    }
 ) {
     const user = await verifySession();
     if (!user) return [];
@@ -316,6 +320,18 @@ export async function getTransactions(
     } else if (endDate) {
         where.date = {
             lte: new Date(endDate),
+        };
+    }
+
+    if (filter?.categoryIds && filter.categoryIds.length > 0) {
+        where.categoryId = {
+            in: filter.categoryIds
+        };
+    }
+
+    if (filter?.type) {
+        where.category = {
+            type: Number(filter.type) // Assuming type is stored as number/enum in DB but passed as string from URL
         };
     }
 

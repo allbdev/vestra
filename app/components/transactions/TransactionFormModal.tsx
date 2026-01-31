@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useActionState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
+import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionActionState } from "@/app/actions/transactions";
@@ -35,6 +36,7 @@ interface TransactionFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     transactionToEdit?: Transaction | null;
+    initialData?: Partial<Transaction> | null;
     categories: Category[];
     recurrencies?: TransactionTemplate[];
     action: (state: TransactionActionState | undefined, payload: FormData) => Promise<TransactionActionState>;
@@ -44,6 +46,7 @@ export function TransactionFormModal({
     isOpen,
     onClose,
     transactionToEdit,
+    initialData,
     categories,
     recurrencies,
     action,
@@ -55,6 +58,7 @@ export function TransactionFormModal({
             isOpen={isOpen}
             onClose={onClose}
             transactionToEdit={transactionToEdit}
+            initialData={initialData}
             categories={categories}
             recurrencies={recurrencies}
             action={action}
@@ -66,6 +70,7 @@ function TransactionFormModalContent({
     isOpen,
     onClose,
     transactionToEdit,
+    initialData,
     categories,
     recurrencies,
     action,
@@ -96,6 +101,17 @@ function TransactionFormModalContent({
             } else {
                 setPaidAt("");
             }
+        } else if (initialData) {
+            // Cloning logic
+            setSelectedCategoryId(initialData.categoryId || "");
+            setDescription(initialData.description || "");
+            setAmount(initialData.amount ? initialData.amount.toString() : "");
+            setIsPaid(false); // Clone usually starts unpaid? Or copy state? Request said "pre-filled", implies copy. But let's defaulting to current day for new transaction usually, but maybe keep original date?
+            // "pre-filled" usually means copy everything as is, but maybe date should be today?
+            // Let's assume date is today (new transaction) but other data is copied.
+            setDate(new Date().toISOString().split('T')[0]);
+            setPaidAt(""); // Reset payment date
+            // If user wants to clone exactly, they can edit date.
         } else {
             // Reset form when opening for creation (and no recurrency selected yet)
             setSelectedCategoryId("");
@@ -108,7 +124,7 @@ function TransactionFormModalContent({
             // Reset recurrency selection if opening fresh
             if (isOpen) setSelectedRecurrencyId("");
         }
-    }, [transactionToEdit, isOpen]);
+    }, [transactionToEdit, initialData, isOpen]);
 
     // Handle recurrency selection
     const handleRecurrencyChange = (recurrencyId: string) => {
@@ -178,16 +194,15 @@ function TransactionFormModalContent({
                         error={state?.errors?.description?.[0]}
                     />
 
-                    <Input
-                        type="number"
-                        name="amount"
+                    {/* Hidden input for raw amount sending to server */}
+                    <input type="hidden" name="amount" value={amount} />
+
+                    <MoneyInput
+                        name="amount_display"
                         id="amount"
                         label="Valor"
-                        step="0.01"
-                        min="0"
                         value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0.00"
+                        onChange={setAmount}
                         required
                         error={state?.errors?.amount?.[0]}
                     />

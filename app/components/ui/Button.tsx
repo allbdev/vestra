@@ -30,8 +30,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant === "primary" || variant === "destructive"
         ? "contained"
         : variant === "secondary"
-        ? "outlined"
-        : "text";
+          ? "outlined"
+          : "text";
 
     // Map custom sizes to MUI sizes
     const muiSize: MuiButtonProps["size"] =
@@ -64,7 +64,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         fullWidth={fullWidth}
         className={className}
-        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : undefined}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" disableShrink /> : undefined}
         {...props}
       >
         {children}

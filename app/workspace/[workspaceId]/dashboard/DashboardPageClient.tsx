@@ -67,8 +67,6 @@ export function DashboardPageClient({
     return await createTransaction(workspaceId, state, formData);
   };
 
-  console.log('isLoading', isLoading);
-
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -82,8 +80,10 @@ export function DashboardPageClient({
             defaultValues={{ startDate, endDate, periodType }}
           >
             <FilterPopover.Title>Filtros</FilterPopover.Title>
-            <FilterPopover.StartDate />
-            <FilterPopover.PeriodType />
+            <FilterPopover.Content>
+              <FilterPopover.StartDate />
+              <FilterPopover.PeriodType />
+            </FilterPopover.Content>
           </FilterPopover>
           <Button onClick={() => setIsCreateOpen(true)}>
             <AiOutlinePlus className="mr-2" />

@@ -2,12 +2,13 @@
 
 import { useState, useActionState, useEffect } from "react";
 import { Button, DateDisplay } from "@/app/components/ui";
-import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
+import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
 import { FilterPopover } from "@/app/components/FilterPopover";
 import { deleteTransaction, createTransaction, updateTransaction, TransactionActionState } from "@/app/actions/transactions";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
 import { Modal } from "@/app/components/ui/Modal";
+import { StatusBadge } from "@/app/components/transactions/StatusBadge";
 
 interface Category {
     id: string;
@@ -49,6 +50,7 @@ export default function TransactionsPageClient({
     defaultDateRange,
 }: TransactionsPageClientProps) {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [transactionToClone, setTransactionToClone] = useState<Transaction | null>(null);
 
     // Create action wrapper
     const createAction = async (state: TransactionActionState | undefined, formData: FormData) => {
@@ -65,7 +67,11 @@ export default function TransactionsPageClient({
                 <div className="flex items-center gap-2">
                     <FilterPopover defaultValues={defaultDateRange}>
                         <FilterPopover.Title>Filtros</FilterPopover.Title>
-                        <FilterPopover.StartDate />
+                        <FilterPopover.Content>
+                            <FilterPopover.StartDate />
+                            <FilterPopover.Category categories={categories} />
+                            <FilterPopover.Type />
+                        </FilterPopover.Content>
                     </FilterPopover>
                     <Button onClick={() => setIsCreateOpen(true)}>
                         <AiOutlinePlus className="mr-2" />
@@ -89,6 +95,10 @@ export default function TransactionsPageClient({
                                 workspaceId={workspaceId}
                                 currentUserId={currentUserId}
                                 isWorkspaceOwner={isWorkspaceOwner}
+                                onClone={(t) => {
+                                    setTransactionToClone(t);
+                                    setIsCreateOpen(true);
+                                }}
                             />
                         ))}
                     </div>
@@ -97,7 +107,11 @@ export default function TransactionsPageClient({
 
             <TransactionFormModal
                 isOpen={isCreateOpen}
-                onClose={() => setIsCreateOpen(false)}
+                onClose={() => {
+                    setIsCreateOpen(false);
+                    setTransactionToClone(null);
+                }}
+                initialData={transactionToClone}
                 categories={categories}
                 action={createAction}
             />
@@ -110,13 +124,15 @@ function TransactionItem({
     categories,
     workspaceId,
     currentUserId,
-    isWorkspaceOwner
+    isWorkspaceOwner,
+    onClone
 }: {
     transaction: Transaction;
     categories: Category[];
     workspaceId: string;
     currentUserId: string;
     isWorkspaceOwner: boolean;
+    onClone: (t: Transaction) => void;
 }) {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -158,11 +174,7 @@ function TransactionItem({
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
                     <h3 className="font-medium truncate">{transaction.description}</h3>
-                    {transaction.isPaid && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
-                            Pago
-                        </span>
-                    )}
+                    <StatusBadge isPaid={transaction.isPaid} date={transaction.date} />
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
                     <span className={amountColor}>
@@ -187,6 +199,9 @@ function TransactionItem({
             </div>
             {canManage && (
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                    <Button variant="ghost" size="sm" onClick={() => onClone(transaction)}>
+                        <AiOutlineCopy className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => setIsEditOpen(true)}>
                         <AiOutlineEdit className="w-4 h-4" />
                     </Button>
@@ -201,7 +216,6 @@ function TransactionItem({
                 </div>
             )}
 
-            {/* Edit Modal */}
             {canManage && (
                 <TransactionFormModal
                     isOpen={isEditOpen}
@@ -212,7 +226,6 @@ function TransactionItem({
                 />
             )}
 
-            {/* Delete Modal */}
             {canManage && (
                 <Modal
                     title="Excluir Transação"
@@ -250,6 +263,3 @@ function TransactionItem({
         </div>
     );
 }
-
-
-

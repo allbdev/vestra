@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useActionState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
+import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionTemplateActionState } from "@/app/actions/transaction-templates";
@@ -71,12 +72,14 @@ function RecurrencyFormModalContent({
     const [selectedFrequency, setSelectedFrequency] = useState<number | null>(FREQUENCY_TYPES.MONTHLY);
     const [isActive, setIsActive] = useState<boolean>(true);
     const [startDate, setStartDate] = useState<string>("");
+    const [baseAmount, setBaseAmount] = useState<string>("");
 
     useEffect(() => {
         if (templateToEdit) {
             setSelectedCategoryId(templateToEdit.categoryId || "");
             setSelectedFrequency(templateToEdit.frequency);
             setIsActive(templateToEdit.active);
+            setBaseAmount(templateToEdit.baseAmount.toString());
             // Format date for input (YYYY-MM-DD)
             const date = new Date(templateToEdit.startDate);
             setStartDate(date.toISOString().split('T')[0]);
@@ -84,6 +87,7 @@ function RecurrencyFormModalContent({
             setSelectedCategoryId("");
             setSelectedFrequency(FREQUENCY_TYPES.MONTHLY);
             setIsActive(true);
+            setBaseAmount("");
             // Default to today
             setStartDate(new Date().toISOString().split('T')[0]);
         }
@@ -121,15 +125,15 @@ function RecurrencyFormModalContent({
                         error={state?.errors?.description?.[0]}
                     />
 
-                    <Input
-                        type="number"
-                        name="baseAmount"
+                    {/* Hidden input for raw amount sending to server */}
+                    <input type="hidden" name="baseAmount" value={baseAmount} />
+
+                    <MoneyInput
+                        name="baseAmount_display"
                         id="baseAmount"
-                        label="Valor"
-                        step="0.01"
-                        min="0"
-                        defaultValue={templateToEdit?.baseAmount?.toString()}
-                        placeholder="0.00"
+                        label="Valor Base"
+                        value={baseAmount}
+                        onChange={setBaseAmount}
                         required
                         error={state?.errors?.baseAmount?.[0]}
                     />

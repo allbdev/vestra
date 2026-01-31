@@ -17,6 +17,7 @@ export interface DashboardTransaction {
   } | null;
 }
 
+// Update Interface
 export interface PeriodData {
   periodKey: string;
   periodLabel: string;
@@ -25,6 +26,8 @@ export interface PeriodData {
     byTransaction: Array<{
       description: string;
       total: number;
+      date: string;       // Added
+      isPaid: boolean;    // Added
     }>;
   };
   outcome: {
@@ -32,11 +35,15 @@ export interface PeriodData {
     byTransaction: Array<{
       description: string;
       total: number;
+      date: string;       // Added
+      isPaid: boolean;    // Added
     }>;
   };
   net: number;
   accumulatedNet: number;
 }
+
+
 
 export interface DashboardData {
   kpis: {
@@ -242,34 +249,24 @@ export async function getDashboardData(
         period.incoming.total += amount;
         totalIncoming += amount;
 
-        // Group by transaction description
-        const transactionEntry = period.incoming.byTransaction.find(
-          (t) => t.description === transaction.description
-        );
-        if (transactionEntry) {
-          transactionEntry.total += amount;
-        } else {
-          period.incoming.byTransaction.push({
-            description: transaction.description,
-            total: amount,
-          });
-        }
+        // No grouping, just list
+        period.incoming.byTransaction.push({
+          description: transaction.description,
+          total: amount,
+          date: transaction.date.toISOString(),
+          isPaid: transaction.isPaid,
+        });
       } else if (category && category.type === CATEGORY_TYPES.EXPENSE) {
         period.outcome.total += amount;
         totalOutcome += amount;
 
-        // Group by transaction description
-        const transactionEntry = period.outcome.byTransaction.find(
-          (t) => t.description === transaction.description
-        );
-        if (transactionEntry) {
-          transactionEntry.total += amount;
-        } else {
-          period.outcome.byTransaction.push({
-            description: transaction.description,
-            total: amount,
-          });
-        }
+        // No grouping, just list
+        period.outcome.byTransaction.push({
+          description: transaction.description,
+          total: amount,
+          date: transaction.date.toISOString(),
+          isPaid: transaction.isPaid,
+        });
       }
 
       period.net = period.incoming.total - period.outcome.total;

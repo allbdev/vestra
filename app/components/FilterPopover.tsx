@@ -7,7 +7,8 @@ import { Popover, Badge } from "@mui/material";
 import { FaFilter } from "react-icons/fa";
 import { DateRangePicker } from "@/app/components/DateRangePicker";
 import { PeriodGroupSelector } from "@/app/components/dashboard/PeriodGroupSelector";
-import { Button } from "./ui";
+import { Button, Select as UiSelect } from "./ui";
+import { MultiSelect } from "./ui/MultiSelect";
 
 interface FilterPopoverProps {
     children: React.ReactNode;
@@ -19,6 +20,8 @@ interface FilterFormValues {
     startDate: string;
     endDate: string;
     periodType: number;
+    categoryIds?: string[];
+    type?: string;
     [key: string]: any;
 }
 
@@ -30,11 +33,6 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
 
 
     // Initialize from URL or defaults
-    // We don't set hardDefaults here because the consumer might want different ones, 
-    // but for receiving initial values we rely on the URL or let the components handle their internal defaults if undefined,
-    // however, the Dashboard has defaults. 
-    // Ideally, the current URL state *is* the state.
-
     const methods = useForm<FilterFormValues>({
         defaultValues: {
             startDate: searchParams.get("startDate") || defaultValues.startDate || "",
@@ -42,6 +40,8 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
             periodType: searchParams.get("periodType")
                 ? Number(searchParams.get("periodType"))
                 : defaultValues.periodType || undefined,
+            categoryIds: searchParams.get("categoryIds")?.split(",") || defaultValues.categoryIds || [],
+            type: searchParams.get("type") || defaultValues.type || "",
         },
         mode: "onChange",
     });
@@ -51,30 +51,39 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
     const watchedValues = watch();
 
     // Sync Form -> URL
-    // We use a debounce or just effect to update URL when values change.
     useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
         let hasChanges = false;
 
         Object.entries(watchedValues).forEach(([key, value]) => {
-            // If undefined, don't set. If null/empty string, maybe remove?
-            // Let's match the logic: if value exists, set it.
             if (value !== undefined && value !== null) {
-                const stringValue = String(value);
-                // Only update valid dates/numbers.
-                // For startDate/endDate/periodType specifically.
-                if (params.get(key) !== stringValue) {
-                    // Avoid setting empty strings if they weren't there, or maybe do set them?
-                    // If user clears date, we want to clear URL.
-                    if (stringValue === "" && !params.has(key)) {
-                        // no-op
-                    } else {
-                        if (stringValue === "") {
-                            params.delete(key);
-                        } else {
-                            params.set(key, stringValue);
+                // Handle arrays (like categoryIds)
+                if (Array.isArray(value)) {
+                    if (value.length > 0) {
+                        const joined = value.join(",");
+                        if (params.get(key) !== joined) {
+                            params.set(key, joined);
+                            hasChanges = true;
                         }
-                        hasChanges = true;
+                    } else {
+                        if (params.has(key)) {
+                            params.delete(key);
+                            hasChanges = true;
+                        }
+                    }
+                } else {
+                    const stringValue = String(value);
+                    if (params.get(key) !== stringValue) {
+                        if (stringValue === "" && !params.has(key)) {
+                            // no-op
+                        } else {
+                            if (stringValue === "") {
+                                params.delete(key);
+                            } else {
+                                params.set(key, stringValue);
+                            }
+                            hasChanges = true;
+                        }
                     }
                 }
             }
@@ -86,7 +95,6 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
     }, [watchedValues, pathname, router, searchParams]);
 
     // Sync URL -> Form
-    // This handles back/forward navigation or parent setting defaults
     useEffect(() => {
         const newValues = {
             startDate: searchParams.get("startDate") || defaultValues.startDate || "",
@@ -94,28 +102,58 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
             periodType: searchParams.get("periodType")
                 ? Number(searchParams.get("periodType"))
                 : (defaultValues.periodType !== undefined ? defaultValues.periodType : undefined),
+            categoryIds: searchParams.get("categoryIds")?.split(",") || defaultValues.categoryIds || [],
+            type: searchParams.get("type") || defaultValues.type || "",
         };
 
         const currentValues = getValues();
 
-        // Check if we need to update form
         const needsReset =
             newValues.startDate !== currentValues.startDate ||
             newValues.endDate !== currentValues.endDate ||
-            newValues.periodType !== currentValues.periodType;
+            newValues.periodType !== currentValues.periodType ||
+            newValues.type !== currentValues.type ||
+            (JSON.stringify(newValues.categoryIds) !== JSON.stringify(currentValues.categoryIds));
 
         if (needsReset) {
-            // preserve other values if any? currently we only have these 3.
             reset(newValues);
         }
     }, [searchParams, reset, getValues, defaultValues.startDate, defaultValues.endDate, defaultValues.periodType]);
 
 
-    // Count active filters (simple heuristic: count non-empty values)
-    // Or specific known keys. For now, let's count all handled keys.
-    const activeFiltersCount = Object.keys(watchedValues).filter(
-        (key) => watchedValues[key]
-    ).length;
+    // Count active filters
+    // Logic: Count key if it differs from 'empty' or 'default'.
+    // categoryIds: active if length > 0
+    // type: active if truthy
+    // periodType: usually required, doesn't count as filter unless it differs from default? 
+    // Usually "Filters" badge counts optional filters. Date and Period might be considered "View settings".
+    // But if date is set, it is a filter. 
+    // The user feedback implies 3 filters on home (Date, Period) + maybe Categories?
+    // Let's count: CategoryIds > 0 ? 1 : 0
+    // Type ? 1 : 0
+    // StartDate/EndDate ? 1 (as range) : 0
+    // PeriodType ? 0 (it's a view mode, not a filter removal usually)
+
+    // Actually simplicity: non-empty values. 
+    // Arrays > 0
+    // Strings != ""
+    // Numbers != undefined
+
+    // User complaint: "showing 4 in the home page even though there's only 3 filters that can be applied".
+    // Maybe: StartDate(1) + EndDate(1) + PeriodType(1) + Category(0) + Type(0) = 3?
+
+    // Refined Logic based on typical UX:
+    // Categories: +1 if selected.
+    // Type: +1 if selected.
+    // Date: +1 if set (range counts as 1 filter).
+    // PeriodType: 0 (View Mode).
+
+    let activeFiltersCount = 0;
+
+    if (watchedValues.categoryIds && watchedValues.categoryIds.length > 0) activeFiltersCount++;
+    if (watchedValues.type) activeFiltersCount++;
+    if (watchedValues.startDate || watchedValues.endDate) activeFiltersCount++;
+    if (watchedValues.periodType) activeFiltersCount++;
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -160,7 +198,7 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
                     }
                 }}
             >
-                <div className="space-y-4 min-w-[300px]">
+                <div className="min-w-[300px]">
                     {children}
                 </div>
             </Popover>
@@ -174,7 +212,6 @@ function FilterTitle({ children }: { children: React.ReactNode }) {
     return <h2 className="text-lg font-semibold mb-4">{children}</h2>;
 }
 
-// Helper for DateRange since it involves two fields
 function DateRangeController() {
     const { setValue, watch } = useFormContext();
     const startDate = watch("startDate");
@@ -210,7 +247,67 @@ function FilterPeriodType() {
 }
 
 
+// Helper for Categories
+function FilterCategory({ categories }: { categories: { id: string; name: string }[] }) {
+    const { control } = useFormContext();
+    return (
+        <Controller
+            name="categoryIds"
+            control={control}
+            render={({ field }) => (
+                <div className="flex flex-col gap-1">
+                    <MultiSelect
+                        label="Categorias"
+                        options={categories.map(c => ({ value: c.id, label: c.name }))}
+                        value={field.value || []}
+                        onChange={field.onChange}
+                    />
+                </div>
+            )}
+        />
+    );
+}
+
+// Filter content default wrapper
+function FilterContent({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {children}
+        </div>
+    );
+}
+
+// Filter type
+function FilterType() {
+    const { control } = useFormContext();
+    return (
+        <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+                <div className="flex flex-col gap-1">
+                    <UiSelect
+                        label="Tipo"
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        options={[
+                            { value: "", label: "Todos" },
+                            { value: "0", label: "Receita" },
+                            { value: "1", label: "Despesa" },
+                        ]}
+                    />
+                </div>
+            )}
+        />
+    );
+}
+
+
+
 // Attach subcomponents
 FilterPopover.Title = FilterTitle;
-FilterPopover.StartDate = DateRangeController; // Directly use the controller wrapper
+FilterPopover.StartDate = DateRangeController;
 FilterPopover.PeriodType = FilterPeriodType;
+FilterPopover.Category = FilterCategory;
+FilterPopover.Content = FilterContent;
+FilterPopover.Type = FilterType;

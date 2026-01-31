@@ -14,7 +14,7 @@ export default async function TransactionsPage({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const { workspaceId } = await params;
-    const { startDate, endDate } = await searchParams;
+    const { startDate, endDate, categoryIds, type } = await searchParams;
 
     const user = await verifySession();
 
@@ -35,7 +35,21 @@ export default async function TransactionsPage({
     const startStr = typeof startDate === 'string' ? startDate : defaultDates.startDate;
     const endStr = typeof endDate === 'string' ? endDate : defaultDates.endDate;
 
-    const transactions = await getTransactions(workspaceId, startStr, endStr);
+    const categoryIdsArr = typeof categoryIds === 'string'
+        ? [categoryIds]
+        : (Array.isArray(categoryIds) ? categoryIds : undefined);
+
+    // Handle comma-separated list if it comes as a single string (common in some URL patterns)
+    const normalizedCategoryIds = typeof categoryIds === 'string' && categoryIds.includes(',')
+        ? categoryIds.split(',')
+        : categoryIdsArr;
+
+    const typeStr = typeof type === 'string' ? type : undefined;
+
+    const transactions = await getTransactions(workspaceId, startStr, endStr, {
+        categoryIds: normalizedCategoryIds,
+        type: typeStr
+    });
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
