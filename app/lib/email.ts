@@ -96,3 +96,53 @@ export async function sendWorkspaceInviteEmail(
     };
   }
 }
+
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "Vestra <no-reply@vestra-financas.com.br>",
+      to: email,
+      subject: "Recuperação de Senha - Vestra",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #333; text-align: center;">Recuperação de Senha</h1>
+          <p style="color: #666; font-size: 16px;">
+            Você solicitou a recuperação de senha da sua conta no Vestra. Clique no botão abaixo para definir uma nova senha:
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Redefinir Senha
+            </a>
+          </div>
+          <p style="color: #666; font-size: 14px;">
+            Este link expira em 1 hora.
+          </p>
+          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 40px;">
+            Se você não solicitou a recuperação de senha, ignore este e-mail.
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Failed to send password reset email:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Email service error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send email",
+    };
+  }
+}
+
+

@@ -146,7 +146,7 @@ export default async function Home() {
             />
             <PlanCard
               name="Pro"
-              price="R$ 29"
+              price="R$ 19,90"
               description="Para quem quer controle total e funcionalidades avançadas."
               buttonText="Assinar Pro"
               isPopular
