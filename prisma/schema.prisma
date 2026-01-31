@@ -21,6 +21,7 @@ model User {
   createdAt                 DateTime              @default(now()) @map("created_at")
   updatedAt                 DateTime              @updatedAt @map("updated_at")
   deletedAt                 DateTime?             @map("deleted_at")
+  active                    Int                   @default(1)
   sessions                  Session[]
   ownedWorkspaces           Workspace[]           @relation("WorkspaceOwner")
   workspaceUsers            WorkspaceUser[]

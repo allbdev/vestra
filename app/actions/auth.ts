@@ -32,6 +32,8 @@ export async function login(
 ): Promise<AuthFormState> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  let unverifiedEmail: string | null = null;
+  let successUserId: string | null = null;
 
   // Validate form fields
   try {
@@ -92,21 +94,47 @@ export async function login(
       };
     }
 
-    // Generate session token
-    const sessionToken = generateSessionToken();
-    const expiresAt = getTokenExpiry();
+    // Check if user is active (verified)
+    if (user.active === 0) {
+      // Generate confirmation code
+      const { generateConfirmationCode, sendConfirmationEmail } = await import("@/app/lib/email");
+      const code = generateConfirmationCode();
 
-    // Create new session
-    await db.session.create({
-      data: {
-        userId: user.id,
-        token: sessionToken,
-        expiresAt,
-      },
-    });
+      // Delete any existing confirmation codes for this email
+      await db.confirmationCode.deleteMany({
+        where: { email: user.email },
+      });
 
-    // Set session token in cookie
-    await setSessionToken(sessionToken);
+      // Store the confirmation code
+      await db.confirmationCode.create({
+        data: {
+          email: user.email,
+          code,
+        },
+      });
+
+      // Send confirmation email
+      await sendConfirmationEmail(user.email, code);
+
+      unverifiedEmail = user.email;
+    } else {
+      // Generate session token
+      const sessionToken = generateSessionToken();
+      const expiresAt = getTokenExpiry();
+
+      // Create new session
+      await db.session.create({
+        data: {
+          userId: user.id,
+          token: sessionToken,
+          expiresAt,
+        },
+      });
+
+      // Set session token in cookie
+      await setSessionToken(sessionToken);
+      successUserId = user.id;
+    }
   } catch (error: any) {
     console.error("Login error:", error);
     return {
@@ -116,21 +144,29 @@ export async function login(
     };
   }
 
-  try {
-    const savedWorkspaceId = await getSessionSelectedWorkspaceId();
-
-    // todo: check user workspaces
-
-    if (savedWorkspaceId) {
-      redirect(`/workspace/${savedWorkspaceId}/dashboard`);
-    }
-  } catch (error: any) {
-    console.error("Set session selected workspace id error:", error);
+  if (unverifiedEmail) {
+    redirect(`/register?step=confirm&email=${encodeURIComponent(unverifiedEmail)}`);
   }
 
-  // Redirect outside try-catch so the redirect error can propagate
-  redirect("/workspace");
+  if (successUserId) {
+    try {
+      const savedWorkspaceId = await getSessionSelectedWorkspaceId();
+
+      // todo: check user workspaces
+
+      if (savedWorkspaceId) {
+        redirect(`/workspace/${savedWorkspaceId}/dashboard`);
+      }
+    } catch (error: any) {
+      console.error("Set session selected workspace id error:", error);
+    }
+
+    redirect("/workspace");
+  }
+
+  return {};
 }
+
 
 export async function logout({ shouldRedirect = true }: { shouldRedirect?: boolean } = {}): Promise<void> {
   const cookieStore = await cookies();
@@ -258,18 +294,13 @@ export async function register(
       };
     }
 
-    // Store pending registration data in global memory (for demo - in production use Redis or DB)
-    // @ts-expect-error - using global for demo purposes
-    if (!global.pendingRegistrations) {
-      // @ts-expect-error - using global for demo purposes
-      global.pendingRegistrations = new Map();
-    }
-
-    // @ts-expect-error - using global for demo purposes
-    global.pendingRegistrations.set(email.toLowerCase(), {
-      name,
-      email: email.toLowerCase(),
-      hashedPassword,
+    await db.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        active: 0,
+      },
     });
 
     return {
@@ -350,45 +381,35 @@ export async function confirm(
       };
     }
 
-    // Get pending registration data
-    // @ts-expect-error - using global for demo purposes
-    const pendingData = global.pendingRegistrations?.get(normalizedEmail);
-
-    if (!pendingData) {
-      return {
-        errors: {
-          _form: ["Dados do cadastro não encontrados. Inicie o processo de cadastro novamente."],
-        },
-      };
-    }
-
-    // Check if user already exists (race condition check)
-    const existingUser = await db.user.findUnique({
+    // Find user
+    const user = await db.user.findUnique({
       where: { email: normalizedEmail },
     });
 
-    if (existingUser) {
-      // Clean up
-      await db.confirmationCode.delete({
-        where: { id: storedCode.id },
-      });
-      // @ts-expect-error - using global for demo purposes
-      global.pendingRegistrations?.delete(normalizedEmail);
-
+    if (!user) {
       return {
         errors: {
-          _form: ["Este e-mail já está cadastrado"],
+          _form: ["Conte não encontrada."],
         },
       };
     }
 
-    // Create the user
-    const newUser = await db.user.create({
-      data: {
-        name: pendingData.name,
-        email: normalizedEmail,
-        password: pendingData.hashedPassword,
-      },
+    if (user.active !== 0) {
+      // Clean up just for safety if code exists
+      await db.confirmationCode.delete({
+        where: { id: storedCode.id },
+      });
+
+      return {
+        success: true,
+        message: "Conta já verificada. Faça login.",
+      };
+    }
+
+    // Activate user
+    const newUser = await db.user.update({
+      where: { id: user.id },
+      data: { active: 1 },
     });
 
     // Assign free plan
@@ -407,8 +428,7 @@ export async function confirm(
     await db.confirmationCode.delete({
       where: { id: storedCode.id },
     });
-    // @ts-expect-error - using global for demo purposes
-    global.pendingRegistrations?.delete(normalizedEmail);
+
 
     return {
       success: true,

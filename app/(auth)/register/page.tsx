@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import Link from "next/link";
 import { Button, Input, CodeInput, Alert } from "@/app/components/ui";
@@ -9,10 +10,14 @@ import { BackgroundEffects } from "@/app/components/BackgroundEffects";
 import { register, confirm } from "@/app/actions/auth";
 import { Logo } from "@/app/components/Logo";
 
-export default function RegisterPage() {
-  const [step, setStep] = useState<Step>("register");
+function RegisterContent() {
+  const searchParams = useSearchParams();
+  const initialStep = searchParams.get("step") === "confirm" ? "confirm" : "register";
+  const initialEmail = searchParams.get("email") || "";
+
+  const [step, setStep] = useState<Step>(initialStep as Step);
   const [confirmationCode, setConfirmationCode] = useState<string[]>(["", "", "", "", "", ""]);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [success, setSuccess] = useState(false);
 
   const [registerState, registerAction, registerPending] = useActionState(register, undefined);
@@ -221,5 +226,17 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   );
 }
