@@ -66,18 +66,18 @@ export function Header({ user, selectedWorkspaceId }: HeaderProps) {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#funcionalidades" className="text-muted hover:text-foreground transition-colors">
+            <Link href="/#funcionalidades" className="text-muted hover:text-foreground transition-colors">
               Funcionalidades
-            </a>
-            <a href="#planos" className="text-muted hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/#planos" className="text-muted hover:text-foreground transition-colors">
               Planos
-            </a>
-            <a href="#sobre" className="text-muted hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/#sobre" className="text-muted hover:text-foreground transition-colors">
               Sobre
-            </a>
-            <a href="#contato" className="text-muted hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/#contato" className="text-muted hover:text-foreground transition-colors">
               Contato
-            </a>
+            </Link>
           </nav>
 
           {/* Desktop CTA / User */}
@@ -143,18 +143,18 @@ export function Header({ user, selectedWorkspaceId }: HeaderProps) {
                 Acessar Dashboard
               </Link>
             )}
-            <a href="#funcionalidades" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
+            <Link href="/#funcionalidades" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
               Funcionalidades
-            </a>
-            <a href="#planos" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
+            </Link>
+            <Link href="/#planos" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
               Planos
-            </a>
-            <a href="#sobre" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
+            </Link>
+            <Link href="/#sobre" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
               Sobre
-            </a>
-            <a href="#contato" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
+            </Link>
+            <Link href="/#contato" className="text-muted hover:text-foreground transition-colors" onClick={() => setIsMenuOpen(false)}>
               Contato
-            </a>
+            </Link>
           </nav>
 
           <div className="mt-auto pt-8 border-t border-border">
