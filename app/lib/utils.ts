@@ -3,11 +3,15 @@ export function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
 }
 
-export function formatCurrency(value: string | number | null | undefined): string {
+export function formatCurrency(
+    value: string | number | null | undefined,
+    options?: Intl.NumberFormatOptions
+): string {
     if (value === null || value === undefined || value === "") {
         return new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
+            ...options,
         }).format(0);
     }
 
@@ -20,5 +24,6 @@ export function formatCurrency(value: string | number | null | undefined): strin
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
+        ...options,
     }).format(numberValue);
 }

@@ -88,7 +88,12 @@ export function DashboardBarChart({ periods }: DashboardBarChartProps) {
                         <YAxis
                             stroke="var(--foreground)"
                             tick={{ fill: "var(--foreground)", fontSize: 12 }}
-                            tickFormatter={(value) => formatCurrency(value)}
+                            tickFormatter={(value) =>
+                                formatCurrency(value, {
+                                    notation: "compact",
+                                    maximumFractionDigits: 1,
+                                })
+                            }
                         />
                         <Tooltip
                             cursor={{ fill: "var(--muted)", opacity: 0.1 }}

@@ -62,7 +62,12 @@ export function DashboardLineChart({ periods }: DashboardLineChartProps) {
             <YAxis
               stroke="var(--foreground)"
               tick={{ fill: "var(--foreground)", fontSize: 12 }}
-              tickFormatter={(value) => formatCurrency(value)}
+              tickFormatter={(value) =>
+                formatCurrency(value, {
+                  notation: "compact",
+                  maximumFractionDigits: 1,
+                })
+              }
             />
             <Tooltip
               contentStyle={{
