@@ -1,5 +1,6 @@
 "use client";
 
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -70,12 +71,14 @@ const theme = createTheme({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-        {children}
-      </LocalizationProvider>
-    </ThemeProvider>
+    <AppRouterCacheProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+          {children}
+        </LocalizationProvider>
+      </ThemeProvider>
+    </AppRouterCacheProvider>
   );
 }
 
