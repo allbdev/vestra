@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
@@ -401,7 +402,11 @@ export async function deleteTransactionTemplate(
     }
 }
 
-export async function getTransactionTemplates(workspaceId: string) {
+/**
+ * Get all transaction templates for a workspace
+ * CACHED: Deduplicated within a single request
+ */
+export const getTransactionTemplates = cache(async (workspaceId: string) => {
     const user = await verifySession();
     if (!user) return [];
 
@@ -424,5 +429,5 @@ export async function getTransactionTemplates(workspaceId: string) {
         console.error("Error fetching transaction templates:", error);
         return [];
     }
-}
+});
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
@@ -198,7 +199,11 @@ export async function deleteCategory(
     }
 }
 
-export async function getCategories(workspaceId: string) {
+/**
+ * Get all categories for a workspace
+ * CACHED: Deduplicated within a single request
+ */
+export const getCategories = cache(async (workspaceId: string) => {
     const user = await verifySession();
     if (!user) return [];
 
@@ -227,4 +232,4 @@ export async function getCategories(workspaceId: string) {
         console.error("Error fetching categories:", error);
         return [];
     }
-}
+});

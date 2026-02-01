@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
 import { CATEGORY_TYPES, FREQUENCY_TYPES } from "@/app/lib/consts";
@@ -186,12 +187,16 @@ function generateAllPeriods(
   return periodMap;
 }
 
-export async function getDashboardData(
+/**
+ * Get dashboard data for a workspace
+ * CACHED: Deduplicated within a single request (based on all arguments)
+ */
+export const getDashboardData = cache(async (
   workspaceId: string,
   startDate: string,
   endDate: string,
   periodType: number
-): Promise<DashboardData | null> {
+): Promise<DashboardData | null> => {
   const user = await verifySession();
   if (!user) return null;
 
@@ -308,8 +313,6 @@ export async function getDashboardData(
       }
     }
 
-
-
     return {
       kpis: {
         bestPeriod,
@@ -323,5 +326,5 @@ export async function getDashboardData(
     console.error("Error fetching dashboard data:", error);
     return null;
   }
-}
+});
 

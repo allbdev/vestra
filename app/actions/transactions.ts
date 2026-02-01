@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
@@ -291,7 +292,11 @@ export async function deleteTransaction(
     }
 }
 
-export async function getTransactions(
+/**
+ * Get all transactions for a workspace with optional filters
+ * CACHED: Deduplicated within a single request (based on all arguments)
+ */
+export const getTransactions = cache(async (
     workspaceId: string,
     startDate?: string,
     endDate?: string,
@@ -299,7 +304,7 @@ export async function getTransactions(
         categoryIds?: string[];
         type?: string;
     }
-) {
+) => {
     const user = await verifySession();
     if (!user) return [];
 
@@ -331,7 +336,7 @@ export async function getTransactions(
 
     if (filter?.type) {
         where.category = {
-            type: Number(filter.type) // Assuming type is stored as number/enum in DB but passed as string from URL
+            type: Number(filter.type)
         };
     }
 
@@ -344,18 +349,18 @@ export async function getTransactions(
             orderBy: { date: "desc" },
         });
 
-        // Convert Decimal to number and Date to string for client components
-        // Explicitly map all fields to avoid passing Prisma objects
-        // Convert Decimal to number and Date to string for client components
-        // Explicitly map all fields to avoid passing Prisma objects
         return transactions.map(serializeTransaction);
     } catch (error) {
         console.error("Error fetching transactions:", error);
         return [];
     }
-}
+});
 
-export async function getTransaction(transactionId: string) {
+/**
+ * Get a single transaction by ID
+ * CACHED: Deduplicated within a single request
+ */
+export const getTransaction = cache(async (transactionId: string) => {
     const user = await verifySession();
     if (!user) return null;
 
@@ -371,14 +376,10 @@ export async function getTransaction(transactionId: string) {
             return null;
         }
 
-        // Convert Decimal to number and Date to string for client components
-        // Explicitly map all fields to avoid passing Prisma objects
-        // Convert Decimal to number and Date to string for client components
-        // Explicitly map all fields to avoid passing Prisma objects
         return serializeTransaction(transaction);
     } catch (error) {
         console.error("Error fetching transaction:", error);
         return null;
     }
-}
+});
 
