@@ -18,3 +18,5 @@ export { Modal } from "./Modal";
 
 export { DateDisplay } from "./DateDisplay";
 export type { DateDisplayProps } from "./DateDisplay";
+
+export { LoadingSpinner } from "./Loading";

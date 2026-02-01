@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, forwardRef } from "react";
 import MuiButton, { ButtonProps as MuiButtonProps } from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
+import { LoadingSpinner } from "./Loading";
 
 interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
   variant?: "primary" | "secondary" | "ghost" | "unstyled" | "destructive";
@@ -64,7 +64,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         fullWidth={fullWidth}
         className={className}
-        startIcon={loading ? <CircularProgress size={20} color="inherit" disableShrink /> : undefined}
+        startIcon={loading ? <LoadingSpinner className={variant === "primary" ? "text-white" : "text-primary"} /> : undefined}
         {...props}
       >
         {children}

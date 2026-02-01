@@ -8,8 +8,8 @@ import { DashboardLineChart } from "@/app/components/dashboard/DashboardLineChar
 import { DashboardBarChart } from "@/app/components/dashboard/DashboardBarChart";
 import { PeriodTransactionsView } from "@/app/components/dashboard/PeriodTransactionsView";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
-import { Button } from "@/app/components/ui";
-import { AiOutlinePlus } from "react-icons/ai";
+import { Button, LoadingSpinner } from "@/app/components/ui";
+import { AiOutlinePlus, AiOutlineLoading3Quarters } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
 import { useState } from "react";
@@ -85,16 +85,15 @@ export function DashboardPageClient({
     setTransactionToEdit(null);
   };
 
+  const showSkeleton = isLoading && !dashboardData;
+
   return (
     <div className="space-y-6">
       {/* ... (Filters section remains) */}
       <div className="flex justify-between items-start gap-4">
-        <div>
-        </div>
+        <div></div>
         <div className="flex items-center gap-2">
-          <FilterPopover
-            defaultValues={{ startDate, endDate, periodType }}
-          >
+          <FilterPopover defaultValues={{ startDate, endDate, periodType }}>
             <FilterPopover.Title>Filtros</FilterPopover.Title>
             <FilterPopover.Content>
               <FilterPopover.StartDate />
@@ -126,11 +125,10 @@ export function DashboardPageClient({
         action={updateAction}
       />
 
-      {/* KPIs & Charts ... */} 
-
+      {/* KPIs & Charts ... */}
 
       {/* KPIs */}
-      {isLoading ? (
+      {showSkeleton ? (
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
             Carregando...
@@ -146,33 +144,18 @@ export function DashboardPageClient({
           </div>
         </section>
       ) : dashboardData ? (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <LoadingWrapper isLoading={isLoading} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             title={getPeriodLabel(periodType)}
-            value={
-              dashboardData.kpis.bestPeriod
-                ? dashboardData.kpis.bestPeriod.net
-                : 0
-            }
+            value={dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.net : 0}
             subtitle={
-              dashboardData.kpis.bestPeriod
-                ? dashboardData.kpis.bestPeriod.periodLabel
-                : undefined
+              dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.periodLabel : undefined
             }
           />
-          <KPICard
-            title="Entradas"
-            value={dashboardData.kpis.incoming}
-          />
-          <KPICard
-            title="Saídas"
-            value={dashboardData.kpis.outcome}
-          />
-          <KPICard
-            title="Saldo do Período"
-            value={dashboardData.kpis.balance}
-          />
-        </section>
+          <KPICard title="Entradas" value={dashboardData.kpis.incoming} />
+          <KPICard title="Saídas" value={dashboardData.kpis.outcome} />
+          <KPICard title="Saldo do Período" value={dashboardData.kpis.balance} />
+        </LoadingWrapper>
       ) : (
         <section className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
           Erro ao carregar dados do dashboard.
@@ -180,7 +163,7 @@ export function DashboardPageClient({
       )}
 
       {/* Chart */}
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
             Carregando gráfico...
@@ -191,27 +174,49 @@ export function DashboardPageClient({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DashboardLineChart periods={dashboardData?.periods || []} />
-          <DashboardBarChart periods={dashboardData?.periods || []} />
+          <LoadingWrapper isLoading={isLoading} className="h-full">
+            <DashboardLineChart periods={dashboardData?.periods || []} />
+          </LoadingWrapper>
+          <LoadingWrapper isLoading={isLoading} className="h-full">
+            <DashboardBarChart periods={dashboardData?.periods || []} />
+          </LoadingWrapper>
         </div>
       )}
 
       {/* Transactions Table */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Transações por Período</h2>
-        {isLoading ? (
+        {showSkeleton ? (
           <div className="bg-card border border-border rounded-2xl p-6 text-center text-muted">
             Carregando...
           </div>
         ) : (
-          <PeriodTransactionsView 
-            periods={dashboardData?.periods || []} 
-            onEditTransaction={handleEditTransaction}
-            workspaceId={workspaceId}
-          />
+          <LoadingWrapper isLoading={isLoading}>
+            <PeriodTransactionsView
+              periods={dashboardData?.periods || []}
+              onEditTransaction={handleEditTransaction}
+              workspaceId={workspaceId}
+            />
+          </LoadingWrapper>
         )}
       </section>
     </div>
   );
 }
 
+function LoadingWrapper({
+  children,
+  isLoading,
+  className,
+}: {
+  children: React.ReactNode;
+  isLoading: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`relative ${className || ""}`}>
+      {children}
+      {isLoading && <LoadingSpinner />}
+    </div>
+  );
+}
