@@ -5,12 +5,14 @@ import { StatusBadge } from "@/app/components/transactions/StatusBadge";
 
 interface PeriodTransactionsViewProps {
   periods: PeriodData[];
+  onEditTransaction?: (transaction: any) => void;
 }
 
 import { formatCurrency } from "@/app/lib/utils";
 
 export function PeriodTransactionsView({
   periods,
+  onEditTransaction,
 }: PeriodTransactionsViewProps) {
   if (periods.length === 0) {
     return (
@@ -45,9 +47,13 @@ export function PeriodTransactionsView({
                       className="flex items-center justify-between text-sm"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="truncate">
+                        <button
+                          type="button"
+                          onClick={() => onEditTransaction?.(trans)}
+                          className="truncate hover:underline cursor-pointer text-left focus:outline-none"
+                        >
                           {trans.description}
-                        </span>
+                        </button>
                         <StatusBadge isPaid={trans.isPaid} date={trans.date} className="!text-[10px]" />
                       </div>
                       <span className="text-green-600 dark:text-green-400 font-medium flex-shrink-0">
@@ -74,9 +80,13 @@ export function PeriodTransactionsView({
                       className="flex items-center justify-between text-sm"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="truncate">
+                        <button
+                          type="button"
+                          onClick={() => onEditTransaction?.(trans)}
+                          className="truncate hover:underline cursor-pointer text-left focus:outline-none"
+                        >
                           {trans.description}
-                        </span>
+                        </button>
                         <StatusBadge isPaid={trans.isPaid} date={trans.date} className="!text-[10px]" />
                       </div>
                       <span className="text-red-600 dark:text-red-400 font-medium flex-shrink-0">

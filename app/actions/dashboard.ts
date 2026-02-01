@@ -24,19 +24,25 @@ export interface PeriodData {
   incoming: {
     total: number;
     byTransaction: Array<{
+      id: string;
       description: string;
       total: number;
-      date: string;       // Added
-      isPaid: boolean;    // Added
+      date: string;
+      isPaid: boolean;
+      paidAt: string | null;
+      categoryId: string | null; // Changed to nullable
     }>;
   };
   outcome: {
     total: number;
     byTransaction: Array<{
+      id: string;
       description: string;
       total: number;
-      date: string;       // Added
-      isPaid: boolean;    // Added
+      date: string;
+      isPaid: boolean;
+      paidAt: string | null;
+      categoryId: string | null; // Changed to nullable
     }>;
   };
   net: number;
@@ -252,10 +258,13 @@ export async function getDashboardData(
 
         // No grouping, just list
         period.incoming.byTransaction.push({
+          id: transaction.id,
           description: transaction.description,
           total: amount,
           date: transaction.date.toISOString(),
           isPaid: transaction.isPaid,
+          paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
+          categoryId: transaction.categoryId,
         });
       } else if (category && category.type === CATEGORY_TYPES.EXPENSE) {
         period.outcome.total += amount;
@@ -263,10 +272,13 @@ export async function getDashboardData(
 
         // No grouping, just list
         period.outcome.byTransaction.push({
+          id: transaction.id,
           description: transaction.description,
           total: amount,
           date: transaction.date.toISOString(),
           isPaid: transaction.isPaid,
+          paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
+          categoryId: transaction.categoryId,
         });
       }
 

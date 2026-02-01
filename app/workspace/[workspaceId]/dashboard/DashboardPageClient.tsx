@@ -11,7 +11,7 @@ import { FREQUENCY_TYPES } from "@/app/lib/consts";
 import { Button } from "@/app/components/ui";
 import { AiOutlinePlus } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
-import { createTransaction } from "@/app/actions/transactions";
+import { createTransaction, updateTransaction } from "@/app/actions/transactions";
 import { useState } from "react";
 
 // Define these locally or import if available, but for now defining based on usage
@@ -61,19 +61,35 @@ export function DashboardPageClient({
 }: DashboardPageClientProps) {
   const { dashboardData, isLoading, periodType, startDate, endDate } = useDashboard(workspaceId, initialData);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
 
   // Wrapper for create action
   const createAction = async (state: any, formData: FormData) => {
     return await createTransaction(workspaceId, state, formData);
   };
 
+  // Wrapper for update action
+  const updateAction = async (state: any, formData: FormData) => {
+    if (!transactionToEdit) return { errors: { _form: ["Erro interno: transação não selecionada"] } };
+    return await updateTransaction(workspaceId, transactionToEdit.id, state, formData);
+  };
+
+  const handleEditTransaction = (transaction: any) => {
+    setTransactionToEdit({
+      ...transaction,
+      amount: transaction.total, // Map total from dashboard to amount
+    });
+  };
+
+  const closeEditModal = () => {
+    setTransactionToEdit(null);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      {/* Filters & Actions */}
+      {/* ... (Filters section remains) */}
       <div className="flex justify-between items-start gap-4">
         <div>
-          {/* Add a title or something here if needed, otherwise empty div is fine for spacing if we want filters on right */}
         </div>
         <div className="flex items-center gap-2">
           <FilterPopover
@@ -92,6 +108,7 @@ export function DashboardPageClient({
         </div>
       </div>
 
+      {/* Create Modal */}
       <TransactionFormModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
@@ -99,6 +116,18 @@ export function DashboardPageClient({
         recurrencies={transactionTemplates}
         action={createAction}
       />
+
+      {/* Edit Modal */}
+      <TransactionFormModal
+        isOpen={!!transactionToEdit}
+        onClose={closeEditModal}
+        transactionToEdit={transactionToEdit}
+        categories={categories}
+        action={updateAction}
+      />
+
+      {/* KPIs & Charts ... */} 
+
 
       {/* KPIs */}
       {isLoading ? (
@@ -175,7 +204,10 @@ export function DashboardPageClient({
             Carregando...
           </div>
         ) : (
-          <PeriodTransactionsView periods={dashboardData?.periods || []} />
+          <PeriodTransactionsView 
+            periods={dashboardData?.periods || []} 
+            onEditTransaction={handleEditTransaction}
+          />
         )}
       </section>
     </div>
