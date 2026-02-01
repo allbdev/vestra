@@ -5,11 +5,11 @@ import { Button, DateDisplay } from "@/app/components/ui";
 import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
 import { FilterPopover } from "@/app/components/FilterPopover";
-import { deleteTransaction, createTransaction, updateTransaction, TransactionActionState } from "@/app/actions/transactions";
+import { createTransaction, updateTransaction, TransactionActionState } from "@/app/actions/transactions";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
-import { Modal } from "@/app/components/ui/Modal";
 import { StatusBadge } from "@/app/components/transactions/StatusBadge";
 import { formatCurrency } from "@/app/lib/utils";
+import { DeleteTransactionModal } from "@/app/components/transactions/DeleteTransactionModal";
 
 interface Category {
     id: string;
@@ -145,22 +145,6 @@ function TransactionItem({
         return await updateTransaction(workspaceId, transaction.id, state, formData);
     };
 
-    const deleteAction = async (state: TransactionActionState | undefined, formData: FormData) => {
-        return await deleteTransaction(workspaceId, transaction.id, state, formData);
-    };
-
-    // Delete handling with useActionState
-    const [deleteState, handleDeleteAction, deletePending] = useActionState(deleteAction, undefined);
-
-    // Close delete modal on success
-    useEffect(() => {
-        if (deleteState?.success) {
-            setIsDeleteOpen(false);
-        }
-    }, [deleteState?.success]);
-
-
-
     const category = transaction.category;
     const isIncome = category?.type === CATEGORY_TYPES.INCOME;
     const amountColor = isIncome ? "text-emerald-500" : "text-red-500";
@@ -223,38 +207,12 @@ function TransactionItem({
             )}
 
             {canManage && (
-                <Modal
-                    title="Excluir Transação"
-                    description="Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."
+                <DeleteTransactionModal
                     isOpen={isDeleteOpen}
                     onClose={() => setIsDeleteOpen(false)}
-                >
-                    <form action={handleDeleteAction}>
-                        <div className="flex justify-end gap-3 pt-4">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => setIsDeleteOpen(false)}
-                                disabled={deletePending}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                disabled={deletePending}
-                                loading={deletePending}
-                            >
-                                {deletePending ? "Excluindo..." : "Excluir"}
-                            </Button>
-                        </div>
-                        {deleteState?.errors?._form && (
-                            <div className="mt-2 text-sm text-red-500 text-right">
-                                {deleteState.errors._form[0]}
-                            </div>
-                        )}
-                    </form>
-                </Modal>
+                    transactionId={transaction.id}
+                    workspaceId={workspaceId}
+                />
             )}
         </div>
     );

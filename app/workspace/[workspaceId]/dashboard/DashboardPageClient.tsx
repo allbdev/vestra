@@ -207,6 +207,7 @@ export function DashboardPageClient({
           <PeriodTransactionsView 
             periods={dashboardData?.periods || []} 
             onEditTransaction={handleEditTransaction}
+            workspaceId={workspaceId}
           />
         )}
       </section>
