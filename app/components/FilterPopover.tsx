@@ -221,7 +221,7 @@ function FilterPeriodType() {
 
 
 // Helper for Categories
-function FilterCategory({ categories }: { categories: { id: string; name: string }[] }) {
+function FilterCategory({ categories }: { categories: { id: string; name: string, type: CATEGORY_TYPES }[] }) {
     const { control } = useFormContext();
     return (
         <Controller
@@ -231,7 +231,9 @@ function FilterCategory({ categories }: { categories: { id: string; name: string
                 <div className="flex flex-col gap-1">
                     <MultiSelect
                         label="Categorias"
-                        options={categories.map(c => ({ value: c.id, label: c.name }))}
+                        options={categories.map(c => ({ 
+                            value: c.id, 
+                            label: c.type === CATEGORY_TYPES.INCOME ? `💰 ${c.name} - (Receita)` : `💸 ${c.name} - (Despesa)` }))}
                         value={field.value || []}
                         onChange={field.onChange}
                     />
