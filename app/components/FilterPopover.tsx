@@ -9,6 +9,7 @@ import { DateRangePicker } from "@/app/components/DateRangePicker";
 import { PeriodGroupSelector } from "@/app/components/dashboard/PeriodGroupSelector";
 import { Button, Select as UiSelect } from "./ui";
 import { MultiSelect } from "./ui/MultiSelect";
+import { CATEGORY_TYPES } from "../lib/consts";
 
 interface FilterPopoverProps {
     children: React.ReactNode;
@@ -119,34 +120,6 @@ export function FilterPopover({ children, defaultValues = {} }: FilterPopoverPro
             reset(newValues);
         }
     }, [searchParams, reset, getValues, defaultValues.startDate, defaultValues.endDate, defaultValues.periodType]);
-
-
-    // Count active filters
-    // Logic: Count key if it differs from 'empty' or 'default'.
-    // categoryIds: active if length > 0
-    // type: active if truthy
-    // periodType: usually required, doesn't count as filter unless it differs from default? 
-    // Usually "Filters" badge counts optional filters. Date and Period might be considered "View settings".
-    // But if date is set, it is a filter. 
-    // The user feedback implies 3 filters on home (Date, Period) + maybe Categories?
-    // Let's count: CategoryIds > 0 ? 1 : 0
-    // Type ? 1 : 0
-    // StartDate/EndDate ? 1 (as range) : 0
-    // PeriodType ? 0 (it's a view mode, not a filter removal usually)
-
-    // Actually simplicity: non-empty values. 
-    // Arrays > 0
-    // Strings != ""
-    // Numbers != undefined
-
-    // User complaint: "showing 4 in the home page even though there's only 3 filters that can be applied".
-    // Maybe: StartDate(1) + EndDate(1) + PeriodType(1) + Category(0) + Type(0) = 3?
-
-    // Refined Logic based on typical UX:
-    // Categories: +1 if selected.
-    // Type: +1 if selected.
-    // Date: +1 if set (range counts as 1 filter).
-    // PeriodType: 0 (View Mode).
 
     let activeFiltersCount = 0;
 
@@ -277,6 +250,11 @@ function FilterContent({ children }: { children: React.ReactNode }) {
     );
 }
 
+const filterOptions: Record<CATEGORY_TYPES, string> = {
+    1: "Receita",
+    2: "Despesa",
+}
+
 // Filter type
 function FilterType() {
     const { control } = useFormContext();
@@ -292,8 +270,7 @@ function FilterType() {
                         onChange={field.onChange}
                         options={[
                             { value: "", label: "Todos" },
-                            { value: "0", label: "Receita" },
-                            { value: "1", label: "Despesa" },
+                            ...Object.entries(filterOptions).map(([key, value]) => ({ value: key.toString(), label: value })),
                         ]}
                     />
                 </div>
