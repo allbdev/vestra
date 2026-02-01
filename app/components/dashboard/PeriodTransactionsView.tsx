@@ -170,12 +170,14 @@ export function PeriodTransactionsView({
         ))}
       </div>
 
-      <DeleteTransactionModal
-        isOpen={!!transactionToDelete}
-        onClose={() => setTransactionToDelete(null)}
-        transactionId={transactionToDelete || ""}
-        workspaceId={workspaceId}
-      />
+      {transactionToDelete && (
+        <DeleteTransactionModal
+          isOpen={!!transactionToDelete}
+          onClose={() => setTransactionToDelete(null)}
+          transactionId={transactionToDelete || ""}
+          workspaceId={workspaceId}
+        />
+      )}
     </>
   );
 }

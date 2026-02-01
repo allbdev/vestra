@@ -216,7 +216,7 @@ function LoadingWrapper({
   return (
     <div className={`relative ${className || ""}`}>
       {children}
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <LoadingSpinner className="absolute top-2 right-2" />}
     </div>
   );
 }
