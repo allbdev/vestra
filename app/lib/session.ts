@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "./db";
 import { AuthenticatedUser } from "./auth";
@@ -40,10 +41,10 @@ export async function clearSessionToken(): Promise<void> {
 }
 
 /**
- * Verify session and return authenticated user
- * This is for use in Server Components and Server Actions
+ * Internal session verification logic
+ * This performs the actual database query
  */
-export async function verifySession(): Promise<AuthenticatedUser | null> {
+async function verifySessionInternal(): Promise<AuthenticatedUser | null> {
   const sessionToken = await getSessionToken();
 
   if (!sessionToken) {
@@ -51,7 +52,6 @@ export async function verifySession(): Promise<AuthenticatedUser | null> {
   }
 
   try {
-
     // Find session in database
     const session = await db.session.findUnique({
       where: { token: sessionToken },
@@ -104,6 +104,15 @@ export async function verifySession(): Promise<AuthenticatedUser | null> {
     return null;
   }
 }
+
+/**
+ * Verify session and return authenticated user
+ * This is for use in Server Components and Server Actions
+ * 
+ * CACHED: Uses React's cache() to ensure only ONE database query
+ * per request, regardless of how many times this is called.
+ */
+export const verifySession = cache(verifySessionInternal);
 
 /**
  * Get user with workspaces for Server Components

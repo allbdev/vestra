@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "./db";
 import { verifySession } from "./session";
 
@@ -18,9 +19,9 @@ export interface WorkspaceData {
 }
 
 /**
- * Get all workspaces for the authenticated user
+ * Internal implementation for getting all workspaces
  */
-export async function getUserWorkspaces(): Promise<WorkspaceData[]> {
+async function getUserWorkspacesInternal(): Promise<WorkspaceData[]> {
   const user = await verifySession();
 
   if (!user) {
@@ -78,9 +79,17 @@ export async function getUserWorkspaces(): Promise<WorkspaceData[]> {
 }
 
 /**
- * Get a single workspace by ID if user has access
+ * Get all workspaces for the authenticated user
+ * 
+ * CACHED: Uses React's cache() to ensure only ONE database query
+ * per request, regardless of how many times this is called.
  */
-export async function getWorkspace(workspaceId: string): Promise<WorkspaceData | null> {
+export const getUserWorkspaces = cache(getUserWorkspacesInternal);
+
+/**
+ * Internal implementation for getting a single workspace
+ */
+async function getWorkspaceInternal(workspaceId: string): Promise<WorkspaceData | null> {
   const user = await verifySession();
 
   if (!user) {
@@ -126,4 +135,12 @@ export async function getWorkspace(workspaceId: string): Promise<WorkspaceData |
     owner: workspace.owner,
   };
 }
+
+/**
+ * Get a single workspace by ID if user has access
+ * 
+ * CACHED: Uses React's cache() to ensure only ONE database query
+ * per request for the same workspaceId.
+ */
+export const getWorkspace = cache(getWorkspaceInternal);
 
