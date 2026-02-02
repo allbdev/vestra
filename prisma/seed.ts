@@ -33,6 +33,27 @@ async function main() {
     })
 
     console.log({ freePlan, proPlan })
+
+    // Backfill onboarding for existing users
+    const users = await prisma.user.findMany({
+        where: {
+            onboarding: {
+                none: {}
+            }
+        }
+    });
+
+    for (const user of users) {
+        await prisma.onboarding.create({
+            data: {
+                userId: user.id,
+                step: 1,
+                completed: false
+            }
+        });
+    }
+
+    console.log(`Backfilled onboarding for ${users.length} users.`);
 }
 
 main()

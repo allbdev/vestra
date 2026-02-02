@@ -12,14 +12,31 @@ import { FiLogOut } from "react-icons/fi";
 import { GoGear, GoPlus } from "react-icons/go";
 import { FaRegBuilding } from "react-icons/fa";
 
+import { TourWrapper } from "@/app/components/common/TourWrapper";
+import { completeOnboardingStep } from "@/app/actions/onboarding";
+
 interface WorkspacePageClientProps {
   workspaces: WorkspaceData[];
+  onboardingStep: { step: number; completed: boolean } | null;
 }
 
-export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
+export function WorkspacePageClient({ workspaces, onboardingStep }: WorkspacePageClientProps) {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [leaveModalData, setLeaveModalData] = useState<{ isOpen: boolean; workspaceId: string; workspaceName: string } | null>(null);
+  const [isTourClosed, setIsTourClosed] = useState(false);
+
+  // Tour logic for Step 1
+  const showTour = onboardingStep?.step === 1 && !onboardingStep.completed && !isTourClosed;
+
+  const handleTourAction = async () => {
+    // Open create workspace modal
+    setIsCreateModalOpen(true);
+    // Mark step 1 as completed
+    await completeOnboardingStep(1);
+  };
+  
+  // ... (handlers)
 
   const handleWorkspaceClick = (workspaceId: string) => {
     setSessionSelectedWorkspaceId(workspaceId);
@@ -47,13 +64,27 @@ export function WorkspacePageClient({ workspaces }: WorkspacePageClientProps) {
               Selecione um workspace para gerenciar suas finanças
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <div className="flex items-center gap-2">
-              <GoPlus />
-              Novo Workspace
-            </div>
-          </Button>
+          <TourWrapper
+            show={showTour}
+            onClose={() => setIsTourClosed(true)}
+            title="Crie seu workspace para começar a organizar suas finanças"
+            subtitle="As suas transações são relaticas ao seu workspace. Você pode criar workspaces para diferentes propósitos, como finanças pessoais, finanças da empresa, etc."
+            actionLabel="Criar Workspace"
+            onAction={handleTourAction}
+            placement="bottom"
+          >
+            {(ref) => (
+              <Button ref={ref} onClick={() => setIsCreateModalOpen(true)}>
+                <div className="flex items-center gap-2">
+                  <GoPlus />
+                  Novo Workspace
+                </div>
+              </Button>
+            )}
+          </TourWrapper>
         </div>
+
+        {/* ... (rest of the component) ... */}
 
         {/* Workspaces Grid */}
         {workspaces.length === 0 ? (

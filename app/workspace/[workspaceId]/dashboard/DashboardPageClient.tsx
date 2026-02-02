@@ -1,6 +1,6 @@
 "use client";
 
-import { getDashboardData, DashboardData } from "@/app/actions/dashboard";
+import { DashboardData } from "@/app/actions/dashboard";
 import { useDashboard } from "@/app/hooks/useDashboard";
 import { FilterPopover } from "@/app/components/FilterPopover";
 import { KPICard } from "@/app/components/dashboard/KPICard";
@@ -9,35 +9,21 @@ import { DashboardBarChart } from "@/app/components/dashboard/DashboardBarChart"
 import { PeriodTransactionsView } from "@/app/components/dashboard/PeriodTransactionsView";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
 import { Button, LoadingSpinner } from "@/app/components/ui";
-import { AiOutlinePlus, AiOutlineLoading3Quarters } from "react-icons/ai";
+import { AiOutlinePlus } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
 import { useState } from "react";
+import { TourWrapper } from "@/app/components/common/TourWrapper";
+import { completeOnboardingStep } from "@/app/actions/onboarding";
 
-// Define these locally or import if available, but for now defining based on usage
-interface Category {
-  id: string;
-  name: string;
-  type: number;
-  color: string | null;
-}
-
-interface TransactionTemplate {
-  id: string;
-  description: string;
-  baseAmount: number;
-  categoryId: string | null;
-  frequency: number | null;
-  startDate: string;
-  active: boolean;
-  category: Category | null;
-}
+// ... existing imports
 
 interface DashboardPageClientProps {
   workspaceId: string;
   initialData: DashboardData | null;
   categories: Category[];
   transactionTemplates: TransactionTemplate[];
+  onboardingStep: { step: number; completed: boolean } | null;
 }
 
 function getPeriodLabel(periodType: number): string {
@@ -58,10 +44,22 @@ export function DashboardPageClient({
   initialData,
   categories,
   transactionTemplates,
+  onboardingStep,
 }: DashboardPageClientProps) {
   const { dashboardData, isLoading, periodType, startDate, endDate } = useDashboard(workspaceId, initialData);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
+  const [isTourClosed, setIsTourClosed] = useState(false);
+
+  // Tour Logic Step 2
+  const showTour = onboardingStep?.step === 2 && !onboardingStep.completed && !isTourClosed;
+
+  const handleTourAction = async () => {
+    // Close modal and complete step
+    await completeOnboardingStep(2);
+  };
+
+  // ... rest of the component
 
   // Wrapper for create action
   const createAction = async (state: any, formData: FormData) => {
@@ -89,7 +87,6 @@ export function DashboardPageClient({
 
   return (
     <div className="space-y-6">
-      {/* ... (Filters section remains) */}
       <div className="flex justify-between items-start gap-4">
         <div></div>
         <div className="flex items-center gap-2">
@@ -145,13 +142,26 @@ export function DashboardPageClient({
         </section>
       ) : dashboardData ? (
         <LoadingWrapper isLoading={isLoading} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            title={getPeriodLabel(periodType)}
-            value={dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.net : 0}
-            subtitle={
-              dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.periodLabel : undefined
-            }
-          />
+          <TourWrapper
+            show={showTour}
+            onClose={() => setIsTourClosed(true)}
+            title="Confira seus principais indicadores financeiros"
+            subtitle="No seu dashboard você pode acompanhar seus principais indicadores financeiros, como entradas, saidas, saldo e melhor periodo"
+            actionLabel="Entendi"
+            onAction={handleTourAction}
+            placement="bottom"
+          >
+            {(ref) => (
+              <KPICard
+                ref={ref}
+                title={getPeriodLabel(periodType)}
+                value={dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.net : 0}
+                subtitle={
+                  dashboardData.kpis.bestPeriod ? dashboardData.kpis.bestPeriod.periodLabel : undefined
+                }
+              />
+            )}
+          </TourWrapper>
           <KPICard title="Entradas" value={dashboardData.kpis.incoming} />
           <KPICard title="Saídas" value={dashboardData.kpis.outcome} />
           <KPICard title="Saldo do Período" value={dashboardData.kpis.balance} />

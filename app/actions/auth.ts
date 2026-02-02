@@ -150,19 +150,20 @@ export async function login(
   }
 
   if (successUserId) {
+    let destination = "/workspace";
     try {
       const savedWorkspaceId = await getSessionSelectedWorkspaceId();
 
       // todo: check user workspaces
 
       if (savedWorkspaceId) {
-        redirect(`/workspace/${savedWorkspaceId}/dashboard`);
+        destination = `/workspace/${savedWorkspaceId}/dashboard`;
       }
     } catch (error: any) {
       console.error("Set session selected workspace id error:", error);
     }
 
-    redirect("/workspace");
+    redirect(destination);
   }
 
   return {};
@@ -428,6 +429,15 @@ export async function confirm(
         },
       });
     }
+
+    // Initialize onboarding
+    await db.onboarding.create({
+      data: {
+        userId: newUser.id,
+        step: 1,
+        completed: false,
+      },
+    });
 
     // Clean up confirmation code and pending data
     await db.confirmationCode.delete({

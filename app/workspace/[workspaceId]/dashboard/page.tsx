@@ -5,6 +5,7 @@ import { getCategories } from "@/app/actions/categories";
 import { getTransactionTemplates } from "@/app/actions/transaction-templates";
 import { DashboardPageClient } from "./DashboardPageClient";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
+import { getOnboardingStep } from "@/app/actions/onboarding";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -31,6 +32,7 @@ export default async function DashboardPage({
 
   const { workspaceId } = await params;
   const defaultDates = getDefaultDateRange();
+  const onboardingStep = await getOnboardingStep();
 
   const initialData = await getDashboardData(
     workspaceId,
@@ -50,6 +52,7 @@ export default async function DashboardPage({
       initialData={initialData}
       categories={categories}
       transactionTemplates={transactionTemplates}
+      onboardingStep={onboardingStep}
     />
   );
 }

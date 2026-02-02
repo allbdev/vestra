@@ -67,16 +67,14 @@ export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalPr
           {...register("name")}
         />
 
-        {formState?.errors?._form && (
-          <Alert variant="error">{formState.errors._form[0]}</Alert>
-        )}
-
-        {formState?.limitReached && (
+        {formState?.limitReached ? (
            <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
                <p className="font-semibold">Limite Atingido</p>
                <p>Você atingiu o limite de workspaces do seu plano.</p>
            </div>
-        )}
+        ) : formState?.errors?._form ? (
+          <Alert variant="error">{formState.errors._form[0]}</Alert>
+        ) : null}
 
         <div className="flex justify-end gap-3 pt-4">
           <Button

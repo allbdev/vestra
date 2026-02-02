@@ -30,6 +30,7 @@ model User {
   ownedTransactionTemplates TransactionTemplate[]
   ownedTransactions         Transaction[]
   userPlans                 UserPlan[]
+  onboarding                Onboarding[]
 
   @@map("users")
 }
@@ -230,3 +231,15 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+
+model Onboarding {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  step      Int
+  completed Boolean
+  userId    String   @map("user_id") @db.VarChar(36)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("onboarding")
+}
