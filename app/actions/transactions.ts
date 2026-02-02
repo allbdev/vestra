@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
 import * as yup from "yup";
-import { transactionSchema, TransactionFormData } from "@/app/lib/schemas";
+import { transactionSchema } from "@/app/lib/schemas";
+import { completeOnboardingStep } from "@/app/actions/onboarding";
 
 // Types for action state
 export type TransactionActionState = {
@@ -108,7 +109,7 @@ export async function createTransaction(
             const errors: TransactionActionState["errors"] = {};
             error.inner.forEach((err) => {
                 if (err.path) {
-                    // @ts-ignore - Dynamic key assignment
+                    // @ts-expect-error - Dynamic key assignment
                     errors[err.path] = [err.message];
                 }
             });
@@ -127,6 +128,8 @@ export async function createTransaction(
     }
 
     try {
+// ... inside createTransaction ...
+
         const transaction = await prisma.transaction.create({
             data: {
                 workspaceId,
@@ -139,6 +142,9 @@ export async function createTransaction(
                 paidAt: paidAtDate,
             },
         });
+        
+        // Complete onboarding step 5 (Create Transaction)
+        await completeOnboardingStep(5);
 
         revalidatePath(`/workspace/${workspaceId}/dashboard/transactions`);
         revalidatePath(`/workspace/${workspaceId}/dashboard/transactions`);
@@ -210,7 +216,7 @@ export async function updateTransaction(
             const errors: TransactionActionState["errors"] = {};
             error.inner.forEach((err) => {
                 if (err.path) {
-                    // @ts-ignore - Dynamic key assignment
+                    // @ts-expect-error - Dynamic key assignment
                     errors[err.path] = [err.message];
                 }
             });

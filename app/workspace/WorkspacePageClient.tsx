@@ -13,7 +13,6 @@ import { GoGear, GoPlus } from "react-icons/go";
 import { FaRegBuilding } from "react-icons/fa";
 
 import { TourWrapper } from "@/app/components/common/TourWrapper";
-import { completeOnboardingStep } from "@/app/actions/onboarding";
 
 interface WorkspacePageClientProps {
   workspaces: WorkspaceData[];
@@ -30,10 +29,10 @@ export function WorkspacePageClient({ workspaces, onboardingStep }: WorkspacePag
   const showTour = onboardingStep?.step === 1 && !onboardingStep.completed && !isTourClosed;
 
   const handleTourAction = async () => {
+    // Close the tour
+    setIsTourClosed(true);
     // Open create workspace modal
     setIsCreateModalOpen(true);
-    // Mark step 1 as completed
-    await completeOnboardingStep(1);
   };
   
   // ... (handlers)
@@ -74,7 +73,7 @@ export function WorkspacePageClient({ workspaces, onboardingStep }: WorkspacePag
             placement="bottom"
           >
             {(ref) => (
-              <Button ref={ref} onClick={() => setIsCreateModalOpen(true)}>
+              <Button ref={ref as React.Ref<HTMLButtonElement>} onClick={() => setIsCreateModalOpen(true)}>
                 <div className="flex items-center gap-2">
                   <GoPlus />
                   Novo Workspace

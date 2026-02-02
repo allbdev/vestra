@@ -24,7 +24,7 @@ export async function getOnboardingStep() {
   return onboarding;
 }
 
-export async function completeOnboardingStep(step: number) {
+export async function completeOnboardingStep(step: number, shouldRevalidate: boolean = true) {
   const user = await verifySession();
 
   if (!user) {
@@ -66,6 +66,13 @@ export async function completeOnboardingStep(step: number) {
       });
   }
 
-  revalidatePath("/workspace");
-  revalidatePath(`/workspace/[workspaceId]`, "layout"); // Revalidate broadly to ensure UI updates
+  if (shouldRevalidate) {
+    revalidatePath("/workspace");
+    revalidatePath(`/workspace/[workspaceId]`, "layout"); // Revalidate broadly to ensure UI updates
+  }
+}
+
+export async function refreshOnboarding() {
+    revalidatePath("/workspace");
+    revalidatePath(`/workspace/[workspaceId]`, "layout");
 }

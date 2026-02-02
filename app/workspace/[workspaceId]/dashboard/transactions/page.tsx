@@ -5,6 +5,7 @@ import { db } from "@/app/lib/db";
 import { getDefaultDateRange } from "@/app/lib/date";
 import TransactionsPageClient from "./TransactionsPageClient";
 import { redirect } from "next/navigation";
+import { getOnboardingStep, completeOnboardingStep } from "@/app/actions/onboarding";
 
 export default async function TransactionsPage({
     params,
@@ -53,6 +54,16 @@ export default async function TransactionsPage({
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
+    let onboardingStep = await getOnboardingStep();
+    let didCompleteStep = false;
+    
+    // Auto-complete onboarding step 5 if transactions exist
+    if (transactions.length > 0 && onboardingStep?.step === 5 && !onboardingStep.completed) {
+        await completeOnboardingStep(5, false);
+        onboardingStep = await getOnboardingStep();
+        didCompleteStep = true;
+    }
+
     return (
         <TransactionsPageClient
             transactions={transactions}
@@ -61,6 +72,7 @@ export default async function TransactionsPage({
             currentUserId={user.id}
             isWorkspaceOwner={isWorkspaceOwner}
             defaultDateRange={{ startDate: startStr, endDate: endStr }}
+            didCompleteStep={didCompleteStep}
         />
     );
 }

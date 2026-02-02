@@ -7,6 +7,8 @@ import { verifySession } from "@/app/lib/session";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
 import { z } from "zod";
 
+import { completeOnboardingStep } from "@/app/actions/onboarding";
+
 const categorySchema = z.object({
     name: z.string().min(1, "O nome é obrigatório").max(100),
     type: z.nativeEnum(CATEGORY_TYPES),
@@ -95,6 +97,9 @@ export async function createCategory(
                 color: validation.data.color ?? null,
             },
         });
+        
+        // Complete onboarding step 3 (Create Category)
+        await completeOnboardingStep(3);
 
         revalidatePath(`/workspace/${workspaceId}/dashboard/categories`);
         return { success: true, data: category };

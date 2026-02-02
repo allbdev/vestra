@@ -13,7 +13,6 @@ import { Logo } from "@/app/components/Logo";
 import { useMediaQuery } from "@mui/material";
 
 import { TourWrapper } from "@/app/components/common/TourWrapper";
-import { completeOnboardingStep } from "@/app/actions/onboarding";
 import React, { forwardRef } from "react";
 
 interface DashboardLayoutClientProps {
@@ -186,16 +185,23 @@ export function DashboardLayoutClient({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isTourClosed, setIsTourClosed] = useState(false);
   
+  // Reset tour closed state when step changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsTourClosed(prev => prev ? false : prev);
+  }, [onboardingStep?.step]);
+  
   // Use MUI media query or similar to detect desktop
   // Note: Tailwind md is 768px
   const isDesktop = useMediaQuery("(min-width:768px)");
 
   // Tour Logic
+  console.log("DashboardLayoutClient Tour Debug:", { onboardingStep, isTourClosed, workspaceId: workspace?.id });
   const currentStep = (onboardingStep?.completed || isTourClosed) ? null : onboardingStep?.step;
 
   const handleTourAction = async (step: number, redirectPath: string) => {
     if (!workspace) return;
-    await completeOnboardingStep(step);
+    setIsTourClosed(true);
     router.push(redirectPath);
   };
   

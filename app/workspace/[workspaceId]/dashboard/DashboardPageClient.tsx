@@ -12,11 +12,12 @@ import { Button, LoadingSpinner } from "@/app/components/ui";
 import { AiOutlinePlus } from "react-icons/ai";
 import { TransactionFormModal } from "@/app/components/transactions/TransactionFormModal";
 import { createTransaction, updateTransaction } from "@/app/actions/transactions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TourWrapper } from "@/app/components/common/TourWrapper";
 import { completeOnboardingStep } from "@/app/actions/onboarding";
-
-// ... existing imports
+import { Category } from "@/app/generated/prisma/client";
+import { TransactionTemplate } from "@/app/lib/types";
 
 interface DashboardPageClientProps {
   workspaceId: string;
@@ -24,6 +25,7 @@ interface DashboardPageClientProps {
   categories: Category[];
   transactionTemplates: TransactionTemplate[];
   onboardingStep: { step: number; completed: boolean } | null;
+  didCompleteStep?: boolean;
 }
 
 function getPeriodLabel(periodType: number): string {
@@ -45,21 +47,36 @@ export function DashboardPageClient({
   categories,
   transactionTemplates,
   onboardingStep,
+  didCompleteStep = false,
 }: DashboardPageClientProps) {
+  const router = useRouter()
+  
   const { dashboardData, isLoading, periodType, startDate, endDate } = useDashboard(workspaceId, initialData);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<any | null>(null);
   const [isTourClosed, setIsTourClosed] = useState(false);
+
+  // Refresh if step was auto-completed on server
+  useEffect(() => {
+    if (didCompleteStep) {
+        router.refresh();
+    }
+  }, [didCompleteStep, router]);
 
   // Tour Logic Step 2
   const showTour = onboardingStep?.step === 2 && !onboardingStep.completed && !isTourClosed;
 
   const handleTourAction = async () => {
     // Close modal and complete step
-    await completeOnboardingStep(2);
+    setIsTourClosed(true);
+    await completeOnboardingStep(2, false);
+    
+    // Explicitly revalidate layout
+    const { refreshOnboarding } = await import("@/app/actions/onboarding");
+    await refreshOnboarding();
+    
+    router.refresh(); 
   };
-
-  // ... rest of the component
 
   // Wrapper for create action
   const createAction = async (state: any, formData: FormData) => {

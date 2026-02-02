@@ -5,7 +5,7 @@ import { getCategories } from "@/app/actions/categories";
 import { getTransactionTemplates } from "@/app/actions/transaction-templates";
 import { DashboardPageClient } from "./DashboardPageClient";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
-import { getOnboardingStep } from "@/app/actions/onboarding";
+import { getOnboardingStep, completeOnboardingStep } from "@/app/actions/onboarding";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -32,7 +32,15 @@ export default async function DashboardPage({
 
   const { workspaceId } = await params;
   const defaultDates = getDefaultDateRange();
-  const onboardingStep = await getOnboardingStep();
+  let onboardingStep = await getOnboardingStep();
+  let didCompleteStep = false;
+
+  // Auto-complete onboarding step 1 if we are in a dashboard
+  if (onboardingStep?.step === 1 && !onboardingStep.completed) {
+      await completeOnboardingStep(1, false);
+      onboardingStep = await getOnboardingStep();
+      didCompleteStep = true;
+  }
 
   const initialData = await getDashboardData(
     workspaceId,
@@ -45,7 +53,7 @@ export default async function DashboardPage({
     getCategories(workspaceId),
     getTransactionTemplates(workspaceId),
   ]);
-
+  
   return (
     <DashboardPageClient
       workspaceId={workspaceId}
@@ -53,6 +61,7 @@ export default async function DashboardPage({
       categories={categories}
       transactionTemplates={transactionTemplates}
       onboardingStep={onboardingStep}
+      didCompleteStep={didCompleteStep}
     />
   );
 }

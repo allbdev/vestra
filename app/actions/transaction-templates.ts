@@ -12,6 +12,8 @@ import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
+import { completeOnboardingStep } from "@/app/actions/onboarding";
+
 /**
  * Generate transaction dates based on frequency and start date
  * Rules:
@@ -262,6 +264,8 @@ export async function createTransactionTemplate(
             ? validatedData.categoryId
             : null;
 
+// ... inside createTransactionTemplate ...
+
         await createTransactionsForTemplate(
             template.id,
             workspaceId,
@@ -272,6 +276,9 @@ export async function createTransactionTemplate(
             new Date(validatedData.startDate),
             validatedData.frequency ?? null
         );
+
+        // Complete onboarding step 4 (Create Recurrence)
+        await completeOnboardingStep(4);
 
         revalidatePath(`/workspace/${workspaceId}/dashboard/recurrencies`);
         revalidatePath(`/workspace/${workspaceId}/dashboard/transactions`);

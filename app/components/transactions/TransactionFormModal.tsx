@@ -12,8 +12,8 @@ import { TransactionActionState } from "@/app/actions/transactions";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { transactionSchema, TransactionFormData } from "@/app/lib/schemas";
+import { TransactionTemplate } from "@/app/lib/types";
 
-// ... existing interfaces ...
 interface Category {
     id: string;
     name: string;
@@ -29,13 +29,6 @@ interface Transaction {
     date: string;
     isPaid: boolean;
     paidAt: string | null;
-}
-
-interface TransactionTemplate {
-    id: string;
-    description: string;
-    baseAmount: number;
-    categoryId: string | null;
 }
 
 interface TransactionFormModalProps {

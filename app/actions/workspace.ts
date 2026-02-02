@@ -7,7 +7,10 @@ import { db } from "@/app/lib/db";
 import { sendWorkspaceInviteEmail } from "@/app/lib/email";
 import { cookies } from "next/headers";
 import { storageKeys } from "../lib/consts";
+import { completeOnboardingStep } from "@/app/actions/onboarding";
 import { checkWorkspaceLimit, checkInviteLimit } from "@/app/lib/subscription";
+import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
+import * as yup from "yup";
 
 export interface WorkspaceFormState {
   errors?: {
@@ -21,11 +24,6 @@ export interface WorkspaceFormState {
   };
   limitReached?: boolean;
 }
-
-import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
-import * as yup from "yup";
-
-// ... existing imports ...
 
 export async function createWorkspace(
   _prevState: WorkspaceFormState | undefined,
@@ -55,7 +53,7 @@ export async function createWorkspace(
         const errors: WorkspaceFormState["errors"] = {};
         error.inner.forEach((err) => {
             if (err.path) {
-                // @ts-ignore
+                // @ts-expect-error - Dynamic key assignment
                 errors[err.path] = [err.message];
             }
         });
@@ -99,6 +97,10 @@ export async function createWorkspace(
         userId: user.id,
       },
     });
+    
+    // Complete onboarding step 1 (Create Workspace)
+    await completeOnboardingStep(1);
+
   } catch (error: any) {
     console.error("Create workspace error:", error);
     return {
@@ -418,7 +420,7 @@ export async function updateWorkspaceName(
         const errors: UpdateWorkspaceNameFormState["errors"] = {};
         error.inner.forEach((err) => {
             if (err.path) {
-                // @ts-ignore
+                // @ts-expect-error - Dynamic key assignment
                 errors[err.path] = [err.message];
             }
         });

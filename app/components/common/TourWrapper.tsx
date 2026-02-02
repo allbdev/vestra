@@ -5,7 +5,7 @@ import { TourModal } from "./TourModal";
 
 import { useMediaQuery } from "@mui/material";
 
-type RefType = HTMLButtonElement | HTMLAnchorElement | null;
+type RefType = HTMLButtonElement | HTMLAnchorElement | HTMLDivElement | null;
 
 interface TourWrapperProps {
   children: (ref: React.RefObject<RefType>) => React.ReactNode;

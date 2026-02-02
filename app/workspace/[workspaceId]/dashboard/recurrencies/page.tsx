@@ -4,6 +4,7 @@ import { verifySession } from "@/app/lib/session";
 import { db } from "@/app/lib/db";
 import RecurrenciesPageClient from "./RecurrenciesPageClient";
 import { redirect } from "next/navigation";
+import { getOnboardingStep, completeOnboardingStep } from "@/app/actions/onboarding";
 
 export default async function RecurrenciesPage({
     params,
@@ -25,10 +26,20 @@ export default async function RecurrenciesPage({
     if (!workspace) {
         redirect("/workspace");
     }
-
     const templates = await getTransactionTemplates(workspaceId);
+
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
+
+    let onboardingStep = await getOnboardingStep();
+    let didCompleteStep = false;
+
+    // Auto-complete onboarding step 4 if recurrences exist
+    if (templates.length > 0 && onboardingStep?.step === 4 && !onboardingStep.completed) {
+        await completeOnboardingStep(4, false);
+        onboardingStep = await getOnboardingStep();
+        didCompleteStep = true;
+    }
 
     return (
         <RecurrenciesPageClient
@@ -37,6 +48,7 @@ export default async function RecurrenciesPage({
             workspaceId={workspaceId}
             currentUserId={user.id}
             isWorkspaceOwner={isWorkspaceOwner}
+            didCompleteStep={didCompleteStep}
         />
     );
 }
