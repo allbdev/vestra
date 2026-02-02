@@ -96,7 +96,7 @@ function SidebarContent({
         />
         
         {/* Step 3: Categories */}
-        <TourWrapper
+        <TourWrapper<HTMLAnchorElement | HTMLButtonElement>
             show={currentStep === 3 && !!workspace}
             onClose={handleTourClose}
             title="Crie sua primeira categoria"
@@ -117,7 +117,7 @@ function SidebarContent({
         </TourWrapper>
 
         {/* Step 4: Recurrences */}
-        <TourWrapper
+        <TourWrapper<HTMLAnchorElement | HTMLButtonElement>
             show={currentStep === 4 && !!workspace}
             onClose={handleTourClose}
             title="Crie sua primeira recorrencia"
@@ -138,7 +138,7 @@ function SidebarContent({
         </TourWrapper>
 
         {/* Step 5: Transactions */}
-        <TourWrapper
+        <TourWrapper<HTMLAnchorElement | HTMLButtonElement>
             show={currentStep === 5 && !!workspace}
             onClose={handleTourClose}
             title="Confira suas transações"

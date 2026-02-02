@@ -63,7 +63,7 @@ export function WorkspacePageClient({ workspaces, onboardingStep }: WorkspacePag
               Selecione um workspace para gerenciar suas finanças
             </p>
           </div>
-          <TourWrapper
+          <TourWrapper<HTMLButtonElement>
             show={showTour}
             onClose={() => setIsTourClosed(true)}
             title="Crie seu workspace para começar a organizar suas finanças"
@@ -73,7 +73,7 @@ export function WorkspacePageClient({ workspaces, onboardingStep }: WorkspacePag
             placement="bottom"
           >
             {(ref) => (
-              <Button ref={ref as React.Ref<HTMLButtonElement>} onClick={() => setIsCreateModalOpen(true)}>
+              <Button ref={ref} onClick={() => setIsCreateModalOpen(true)}>
                 <div className="flex items-center gap-2">
                   <GoPlus />
                   Novo Workspace

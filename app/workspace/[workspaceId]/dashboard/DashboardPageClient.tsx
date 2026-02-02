@@ -159,7 +159,7 @@ export function DashboardPageClient({
         </section>
       ) : dashboardData ? (
         <LoadingWrapper isLoading={isLoading} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <TourWrapper
+          <TourWrapper<HTMLDivElement>
             show={showTour}
             onClose={() => setIsTourClosed(true)}
             title="Confira seus principais indicadores financeiros"

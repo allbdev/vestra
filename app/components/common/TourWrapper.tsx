@@ -5,10 +5,8 @@ import { TourModal } from "./TourModal";
 
 import { useMediaQuery } from "@mui/material";
 
-type RefType = HTMLButtonElement | HTMLAnchorElement | HTMLDivElement | null;
-
-interface TourWrapperProps {
-  children: (ref: React.RefObject<RefType>) => React.ReactNode;
+interface TourWrapperProps<T extends HTMLElement = HTMLElement> {
+  children: (ref: React.RefObject<T>) => React.ReactNode;
   show: boolean;
   onClose: () => void;
   title: string;
@@ -18,7 +16,7 @@ interface TourWrapperProps {
   placement?: "top" | "bottom" | "left" | "right";
 }
 
-export function TourWrapper({
+export function TourWrapper<T extends HTMLElement = HTMLElement>({
   children,
   show,
   onClose,
@@ -27,10 +25,10 @@ export function TourWrapper({
   actionLabel,
   onAction,
   placement = "bottom",
-}: TourWrapperProps) {
+}: TourWrapperProps<T>) {
   // Use state to store the element and trigger re-render when available
-  const [anchorEl, setAnchorEl] = useState<RefType>(null);
-  const elementRef = useRef<RefType>(null);
+  const [anchorEl, setAnchorEl] = useState<T | null>(null);
+  const elementRef = useRef<T>(null) as React.RefObject<T>;
   
   // Use MUI media query to detect mobile (same breakpoint as layout for consistency)
   // Assuming theme default or custom, but MD (768px) is a good standard fallback if theme is not available directly in hook.
