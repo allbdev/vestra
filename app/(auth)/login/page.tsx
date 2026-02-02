@@ -1,14 +1,44 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button, Input, Alert } from "@/app/components/ui";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
-import { login } from "@/app/actions/auth";
+import { login, AuthFormState } from "@/app/actions/auth";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { loginSchema, LoginFormData } from "@/app/lib/schemas";
 import { Logo } from "@/app/components/Logo";
 
 export default function LoginPage() {
-  const [state, action, pending] = useActionState(login, undefined);
+  const [formState, setFormState] = useState<AuthFormState>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+    setFormState({});
+    try {
+      const result = await login(undefined, data);
+      setFormState(result);
+    } catch (error) {
+      console.error(error);
+      setFormState({ errors: { _form: ["Erro inesperado"] } });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -23,23 +53,21 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl shadow-black/20 animate-slide-up">
-          <form action={action} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
               label="E-mail"
               type="email"
-              name="email"
               placeholder="joao@exemplo.com"
-              error={state?.errors?.email?.[0]}
-              required
+              error={errors.email?.message || formState?.errors?.email?.[0]}
+              {...register("email")}
             />
 
             <Input
               label="Senha"
               type="password"
-              name="password"
               placeholder="••••••••"
-              error={state?.errors?.password?.[0]}
-              required
+              error={errors.password?.message || formState?.errors?.password?.[0]}
+              {...register("password")}
             />
 
             <div className="flex items-center justify-between">
@@ -58,12 +86,12 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {state?.errors?._form && (
-              <Alert variant="error">{state.errors._form[0]}</Alert>
+            {formState?.errors?._form && (
+              <Alert variant="error">{formState.errors._form[0]}</Alert>
             )}
 
-            <Button type="submit" loading={pending} fullWidth disabled={pending}>
-              {pending ? "Entrando..." : "Entrar"}
+            <Button type="submit" loading={isLoading} fullWidth disabled={isLoading}>
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 

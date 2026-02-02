@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
 import { FREQUENCY_TYPES } from "@/app/lib/consts";
-import { z } from "zod";
+import * as yup from "yup";
+import { transactionTemplateSchema } from "@/app/lib/schemas";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
@@ -155,20 +156,7 @@ async function createTransactionsForTemplate(
     });
 }
 
-const transactionTemplateSchema = z.object({
-    description: z.string().min(1, "A descrição é obrigatória").max(255),
-    baseAmount: z.string().refine(
-        (val) => !isNaN(Number(val)) && Number(val) > 0,
-        "O valor deve ser um número positivo"
-    ),
-    categoryId: z.string().uuid("Categoria inválida").optional().nullable().or(z.literal("")),
-    frequency: z.nativeEnum(FREQUENCY_TYPES).optional().nullable(),
-    startDate: z.string().refine(
-        (val) => !isNaN(Date.parse(val)),
-        "Data inválida"
-    ),
-    active: z.boolean().optional(),
-});
+
 
 // Types for action state
 export interface TransactionTemplateActionState {
@@ -229,17 +217,30 @@ export async function createTransactionTemplate(
     const frequency = frequencyValue ? Number(frequencyValue) : null;
     const active = activeValue === "true" || activeValue === "on";
 
-    const validation = transactionTemplateSchema.safeParse({
+    const rawData = {
         description,
         baseAmount,
-        categoryId: categoryId || null,
-        frequency: frequency ? frequency : null,
+        categoryId: categoryId || "",
+        frequency: frequency ? frequency : undefined,
         startDate,
         active,
-    });
+    };
 
-    if (!validation.success) {
-        return { errors: validation.error.flatten().fieldErrors };
+    let validatedData;
+    try {
+        validatedData = await transactionTemplateSchema.validate(rawData, { abortEarly: false });
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const errors: TransactionTemplateActionState["errors"] = {};
+            error.inner.forEach((err) => {
+                if (err.path) {
+                    // @ts-ignore
+                    errors[err.path] = [err.message];
+                }
+            });
+            return { errors };
+        }
+        return { errors: { _form: ["Erro de validação"] } };
     }
 
     try {
@@ -247,29 +248,29 @@ export async function createTransactionTemplate(
             data: {
                 workspaceId,
                 ownerId: user.id,
-                description: validation.data.description,
-                baseAmount: validation.data.baseAmount,
-                categoryId: validation.data.categoryId && validation.data.categoryId !== "" ? validation.data.categoryId : null,
-                frequency: validation.data.frequency ?? null,
-                startDate: new Date(validation.data.startDate),
-                active: validation.data.active ?? true,
+                description: validatedData.description,
+                baseAmount: validatedData.baseAmount,
+                categoryId: validatedData.categoryId && validatedData.categoryId !== "" ? validatedData.categoryId : null,
+                frequency: validatedData.frequency ?? null,
+                startDate: new Date(validatedData.startDate),
+                active: validatedData.active ?? true,
             },
         });
 
         // Create transactions based on the template frequency
-        const resolvedCategoryId = validation.data.categoryId && validation.data.categoryId !== ""
-            ? validation.data.categoryId
+        const resolvedCategoryId = validatedData.categoryId && validatedData.categoryId !== ""
+            ? validatedData.categoryId
             : null;
 
         await createTransactionsForTemplate(
             template.id,
             workspaceId,
             user.id,
-            validation.data.description,
-            validation.data.baseAmount,
+            validatedData.description,
+            validatedData.baseAmount.toString(),
             resolvedCategoryId,
-            new Date(validation.data.startDate),
-            validation.data.frequency ?? null
+            new Date(validatedData.startDate),
+            validatedData.frequency ?? null
         );
 
         revalidatePath(`/workspace/${workspaceId}/dashboard/recurrencies`);
@@ -321,29 +322,42 @@ export async function updateTransactionTemplate(
     const frequency = frequencyValue ? Number(frequencyValue) : null;
     const active = activeValue === "true" || activeValue === "on";
 
-    const validation = transactionTemplateSchema.safeParse({
+    const rawData = {
         description,
         baseAmount,
-        categoryId: categoryId || null,
-        frequency: frequency ? frequency : null,
+        categoryId: categoryId || "",
+        frequency: frequency ? frequency : undefined,
         startDate,
         active,
-    });
+    };
 
-    if (!validation.success) {
-        return { errors: validation.error.flatten().fieldErrors };
+    let validatedData;
+    try {
+        validatedData = await transactionTemplateSchema.validate(rawData, { abortEarly: false });
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const errors: TransactionTemplateActionState["errors"] = {};
+            error.inner.forEach((err) => {
+                if (err.path) {
+                    // @ts-ignore
+                    errors[err.path] = [err.message];
+                }
+            });
+            return { errors };
+        }
+        return { errors: { _form: ["Erro de validação"] } };
     }
 
     try {
         await prisma.transactionTemplate.update({
             where: { id: templateId },
             data: {
-                description: validation.data.description,
-                baseAmount: validation.data.baseAmount,
-                categoryId: validation.data.categoryId && validation.data.categoryId !== "" ? validation.data.categoryId : null,
-                frequency: validation.data.frequency ?? null,
-                startDate: new Date(validation.data.startDate),
-                active: validation.data.active ?? true,
+                description: validatedData.description,
+                baseAmount: validatedData.baseAmount,
+                categoryId: validatedData.categoryId && validatedData.categoryId !== "" ? validatedData.categoryId : null,
+                frequency: validatedData.frequency ?? null,
+                startDate: new Date(validatedData.startDate),
+                active: validatedData.active ?? true,
             },
         });
 

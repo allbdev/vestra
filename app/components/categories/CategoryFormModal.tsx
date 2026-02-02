@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState, PropsWithChildren } from "react";
+import { useState, useEffect, useActionState } from "react";
 import { Button, Input, Select } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
 import { CategoryActionState } from "@/app/actions/categories";
@@ -60,18 +60,8 @@ function CategoryFormModalContent({
 }: CategoryFormModalProps) {
     const [state, formAction, pending] = useActionState(action, undefined);
 
-    const [selectedType, setSelectedType] = useState<number>(CATEGORY_TYPES.EXPENSE);
-    const [selectedColor, setSelectedColor] = useState<string>(COLORS[0]);
-
-    useEffect(() => {
-        if (categoryToEdit) {
-            setSelectedType(categoryToEdit.type);
-            setSelectedColor(categoryToEdit.color || COLORS[0]);
-        } else {
-            setSelectedType(CATEGORY_TYPES.EXPENSE);
-            setSelectedColor(COLORS[0]);
-        }
-    }, [categoryToEdit, isOpen]);
+    const [selectedType, setSelectedType] = useState<number>(categoryToEdit ? categoryToEdit.type : CATEGORY_TYPES.EXPENSE);
+    const [selectedColor, setSelectedColor] = useState<string>(categoryToEdit ? categoryToEdit.color || COLORS[0] : COLORS[0]);
 
     useEffect(() => {
         if (state?.success) {

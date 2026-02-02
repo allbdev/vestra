@@ -8,14 +8,7 @@ import { generateSessionToken, getTokenExpiry } from "@/app/lib/auth";
 import { setSessionToken, clearSessionToken } from "@/app/lib/session";
 import * as yup from "yup";
 import { getSessionSelectedWorkspaceId } from "./workspace";
-
-const loginSchema = yup.object({
-  email: yup
-    .string()
-    .email("Formato de e-mail inválido")
-    .required("E-mail é obrigatório"),
-  password: yup.string().required("Senha é obrigatória"),
-});
+import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/app/lib/schemas";
 
 export interface AuthFormState {
   errors?: {
@@ -28,10 +21,18 @@ export interface AuthFormState {
 
 export async function login(
   _prevState: AuthFormState | undefined,
-  formData: FormData
+  formData: FormData | LoginFormData
 ): Promise<AuthFormState> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  let email, password;
+
+  if (formData instanceof FormData) {
+    email = formData.get("email") as string;
+    password = formData.get("password") as string;
+  } else {
+    email = formData.email;
+    password = formData.password;
+  }
+  
   let unverifiedEmail: string | null = null;
   let successUserId: string | null = null;
 
@@ -200,48 +201,45 @@ export interface RegisterFormState {
 
 export async function register(
   _prevState: RegisterFormState | undefined,
-  formData: FormData
+  formData: FormData | RegisterFormData
 ): Promise<RegisterFormState> {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const password_confirmation = formData.get("password_confirmation") as string;
+  let name, email, password, password_confirmation;
 
-  // Validate required fields
-  if (!email || !password || !password_confirmation) {
-    return {
-      errors: {
-        _form: ["E-mail, senha e confirmação de senha são obrigatórios"],
-      },
-    };
+  if (formData instanceof FormData) {
+      name = formData.get("name") as string;
+      email = formData.get("email") as string;
+      password = formData.get("password") as string;
+      password_confirmation = formData.get("password_confirmation") as string;
+  } else {
+      name = formData.name;
+      email = formData.email;
+      password = formData.password;
+      password_confirmation = formData.password_confirmation;
   }
 
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return {
-      errors: {
-        email: ["Formato de e-mail inválido"],
-      },
-    };
-  }
 
-  // Check if passwords match
-  if (password !== password_confirmation) {
-    return {
-      errors: {
-        password_confirmation: ["As senhas não coincidem"],
-      },
-    };
-  }
-
-  // Validate password strength
-  if (password.length < 8) {
-    return {
-      errors: {
-        password: ["A senha deve ter pelo menos 8 caracteres"],
-      },
-    };
+  try {
+    const validatedData = await registerSchema.validate({ name, email, password, password_confirmation }, { abortEarly: false });
+    // Use validated data
+    name = validatedData.name;
+    email = validatedData.email;
+    password = validatedData.password;
+    
+  } catch (error) {
+      if (error instanceof yup.ValidationError) {
+          const fieldErrors: Record<string, string[]> = {};
+          error.inner.forEach((err) => {
+              if (err.path) {
+                  fieldErrors[err.path] = [err.message];
+              }
+          });
+          return { errors: fieldErrors };
+      }
+       return {
+          errors: {
+              _form: ["Erro na validação"],
+          }
+      };
   }
 
   try {
@@ -329,10 +327,17 @@ const CODE_EXPIRY_MINUTES = 5;
 
 export async function confirm(
   _prevState: ConfirmFormState | undefined,
-  formData: FormData
+  formData: FormData | { email: string; confirmation_code: string }
 ): Promise<ConfirmFormState> {
-  const email = formData.get("email") as string;
-  const confirmation_code = formData.get("confirmation_code") as string;
+  let email, confirmation_code;
+  
+  if (formData instanceof FormData) {
+      email = formData.get("email") as string;
+      confirmation_code = formData.get("confirmation_code") as string;
+  } else {
+      email = formData.email;
+      confirmation_code = formData.confirmation_code;
+  }
 
   // Validate required fields
   if (!email || !confirmation_code) {

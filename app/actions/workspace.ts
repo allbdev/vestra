@@ -22,9 +22,14 @@ export interface WorkspaceFormState {
   limitReached?: boolean;
 }
 
+import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
+import * as yup from "yup";
+
+// ... existing imports ...
+
 export async function createWorkspace(
   _prevState: WorkspaceFormState | undefined,
-  formData: FormData
+  formData: FormData | WorkspaceFormData
 ): Promise<WorkspaceFormState> {
   const user = await verifySession();
 
@@ -36,21 +41,29 @@ export async function createWorkspace(
     };
   }
 
-  const name = formData.get("name") as string;
-
-  // Validate name
-  if (!name || name.trim().length < 2) {
-    return {
-      errors: {
-        name: ["Nome do workspace é obrigatório e deve ter pelo menos 2 caracteres"],
-      },
-    };
+  let name;
+  if (formData instanceof FormData) {
+      name = formData.get("name") as string;
+  } else {
+      name = formData.name;
   }
-
-  if (name.trim().length > 255) {
+  
+  try {
+    await workspaceSchema.validate({ name }, { abortEarly: false });
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+        const errors: WorkspaceFormState["errors"] = {};
+        error.inner.forEach((err) => {
+            if (err.path) {
+                // @ts-ignore
+                errors[err.path] = [err.message];
+            }
+        });
+        return { errors };
+        }
     return {
       errors: {
-        name: ["Nome deve ter no máximo 255 caracteres"],
+        _form: ["Erro de validação"],
       },
     };
   }
@@ -264,7 +277,7 @@ export interface RemoveUserFormState {
 
 export async function removeUser(
   prevState: RemoveUserFormState | undefined,
-  formData: FormData
+  formData: FormData | { workspaceId: string; userId: string }
 ): Promise<RemoveUserFormState> {
   const user = await verifySession();
 
@@ -276,8 +289,14 @@ export async function removeUser(
     };
   }
 
-  const workspaceId = formData.get("workspaceId") as string;
-  const userId = formData.get("userId") as string;
+  let workspaceId, userId;
+  if (formData instanceof FormData) {
+      workspaceId = formData.get("workspaceId") as string;
+      userId = formData.get("userId") as string;
+  } else {
+      workspaceId = formData.workspaceId;
+      userId = formData.userId;
+  }
 
   if (!workspaceId || !userId) {
     return {
@@ -363,7 +382,7 @@ export interface UpdateWorkspaceNameFormState {
 
 export async function updateWorkspaceName(
   prevState: UpdateWorkspaceNameFormState | undefined,
-  formData: FormData
+  formData: FormData | { workspaceId: string, name: string }
 ): Promise<UpdateWorkspaceNameFormState> {
   const user = await verifySession();
 
@@ -375,8 +394,14 @@ export async function updateWorkspaceName(
     };
   }
 
-  const workspaceId = formData.get("workspaceId") as string;
-  const name = formData.get("name") as string;
+  let workspaceId, name;
+  if (formData instanceof FormData) {
+      workspaceId = formData.get("workspaceId") as string;
+      name = formData.get("name") as string;
+  } else {
+      workspaceId = formData.workspaceId;
+      name = formData.name;
+  }
 
   if (!workspaceId) {
     return {
@@ -386,19 +411,22 @@ export async function updateWorkspaceName(
     };
   }
 
-  // Validate name
-  if (!name || name.trim().length < 2) {
+  try {
+    await workspaceSchema.validate({ name }, { abortEarly: false });
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+        const errors: UpdateWorkspaceNameFormState["errors"] = {};
+        error.inner.forEach((err) => {
+            if (err.path) {
+                // @ts-ignore
+                errors[err.path] = [err.message];
+            }
+        });
+        return { errors };
+    }
     return {
       errors: {
-        name: ["Nome do workspace é obrigatório e deve ter pelo menos 2 caracteres"],
-      },
-    };
-  }
-
-  if (name.trim().length > 255) {
-    return {
-      errors: {
-        name: ["Nome deve ter no máximo 255 caracteres"],
+        _form: ["Erro de validação"],
       },
     };
   }
@@ -452,7 +480,7 @@ export interface DeleteWorkspaceFormState {
 
 export async function deleteWorkspace(
   prevState: DeleteWorkspaceFormState | undefined,
-  formData: FormData
+  formData: FormData | { workspaceId: string }
 ): Promise<DeleteWorkspaceFormState> {
   const user = await verifySession();
 
@@ -464,7 +492,12 @@ export async function deleteWorkspace(
     };
   }
 
-  const workspaceId = formData.get("workspaceId") as string;
+  let workspaceId;
+  if (formData instanceof FormData) {
+      workspaceId = formData.get("workspaceId") as string;
+  } else {
+      workspaceId = formData.workspaceId;
+  }
 
   if (!workspaceId) {
     return {
@@ -528,7 +561,7 @@ export interface LeaveWorkspaceFormState {
 
 export async function leaveWorkspace(
   prevState: LeaveWorkspaceFormState | undefined,
-  formData: FormData
+  formData: FormData | { workspaceId: string }
 ): Promise<LeaveWorkspaceFormState> {
   const user = await verifySession();
 
@@ -540,7 +573,12 @@ export async function leaveWorkspace(
     };
   }
 
-  const workspaceId = formData.get("workspaceId") as string;
+  let workspaceId;
+  if (formData instanceof FormData) {
+      workspaceId = formData.get("workspaceId") as string;
+  } else {
+      workspaceId = formData.workspaceId;
+  }
 
   if (!workspaceId) {
     return {

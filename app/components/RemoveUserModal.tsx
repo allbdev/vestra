@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useState } from "react";
 import { Button, Alert, Modal } from "./ui";
 import { removeUser } from "../actions/workspace";
 
@@ -15,13 +15,32 @@ interface RemoveUserModalProps {
 
 export function RemoveUserModal({ workspaceId, user }: RemoveUserModalProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [state, action, pending] = useActionState(removeUser, undefined);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    useEffect(() => {
-        if (state?.message) {
-            setIsOpen(false);
+    const handleRemove = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const result = await removeUser(undefined, { workspaceId, userId: user.id });
+            if (result.message) {
+                 setIsOpen(false);
+            } else if (result.errors?._form) {
+                setError(result.errors._form[0]);
+            }
+        } catch (err: any) {
+            setError("Erro ao processar solicitação");
+        } finally {
+            setLoading(false);
         }
-    }, [state?.message]);
+    };
+
+    const handleClose = () => {
+        setIsOpen(false);
+        setError("");
+    }
 
     return (
         <>
@@ -29,7 +48,7 @@ export function RemoveUserModal({ workspaceId, user }: RemoveUserModalProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(true)}
-                disabled={pending}
+                disabled={loading}
             >
                 <svg
                     className="w-4 h-4 mr-2"
@@ -49,29 +68,25 @@ export function RemoveUserModal({ workspaceId, user }: RemoveUserModalProps) {
 
             <Modal
                 isOpen={isOpen}
-                onClose={() => setIsOpen(false)}
+                onClose={handleClose}
                 title="Remover Usuário"
                 description={`Tem certeza que deseja remover ${user.name || user.email} do workspace?`}
             >
-                <form action={action} className="space-y-4">
-                    <input type="hidden" name="workspaceId" value={workspaceId} />
-                    <input type="hidden" name="userId" value={user.id} />
-
-                    {state?.errors?._form && (
-                        <Alert variant="error">{state.errors._form[0]}</Alert>
+                <form onSubmit={handleRemove} className="space-y-4">
+                    {error && (
+                        <Alert variant="error">{error}</Alert>
                     )}
-
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => setIsOpen(false)}
-                            disabled={pending}
+                            onClick={handleClose}
+                            disabled={loading}
                         >
                             Cancelar
                         </Button>
-                        <Button type="submit" loading={pending} disabled={pending} variant="destructive">
+                        <Button type="submit" loading={loading} disabled={loading} variant="destructive">
                             Remover
                         </Button>
                     </div>

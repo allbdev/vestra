@@ -2,13 +2,15 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useActionState } from "react";
 import Link from "next/link";
 import { Button, Input, CodeInput, Alert } from "@/app/components/ui";
 import { Step } from "./domain";
 import { BackgroundEffects } from "@/app/components/BackgroundEffects";
-import { register, confirm } from "@/app/actions/auth";
+import { register, confirm, RegisterFormState, ConfirmFormState } from "@/app/actions/auth";
 import { Logo } from "@/app/components/Logo";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { registerSchema, RegisterFormData } from "@/app/lib/schemas";
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -20,50 +22,63 @@ function RegisterContent() {
   const [email, setEmail] = useState(initialEmail);
   const [success, setSuccess] = useState(false);
 
-  const [registerState, registerAction, registerPending] = useActionState(register, undefined);
-  const [confirmState, confirmAction, confirmPending] = useActionState(confirm, undefined);
+  const [registerState, setRegisterState] = useState<RegisterFormState>({});
+  const [confirmState, setConfirmState] = useState<ConfirmFormState>({});
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
-  // Move to confirm step when registration succeeds
-  useEffect(() => {
-    if (registerState?.message && !registerState?.errors) {
-      setStep("confirm");
+  // Register Form
+  const {
+    register: registerField,
+    handleSubmit: handleRegisterSubmit,
+    formState: { errors: registerErrors },
+  } = useForm({
+    resolver: yupResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: initialEmail,
+      password: "",
+      password_confirmation: "",
+    },
+  });
+
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    setIsRegisterLoading(true);
+    setRegisterState({});
+    try {
+      const result = await register(undefined, data);
+      setRegisterState(result);
+      if (result.message && !result.errors) {
+        setEmail(data.email);
+        setStep("confirm");
+      }
+    } catch (error) {
+      console.error(error);
+      setRegisterState({ errors: { _form: ["Erro inesperado"] } });
+    } finally {
+      setIsRegisterLoading(false);
     }
-  }, [registerState]);
+  };
 
-  // Show success when confirmation succeeds
-  useEffect(() => {
-    if (confirmState?.success) {
-      setSuccess(true);
+  const onConfirmSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsConfirmLoading(true);
+    setConfirmState({});
+    
+    try {
+      const code = confirmationCode.join("");
+      const result = await confirm(undefined, { email, confirmation_code: code });
+      setConfirmState(result);
+      if (result.success) {
+        setSuccess(true);
+      }
+    } catch (error) {
+       console.error(error);
+       setConfirmState({ errors: { _form: ["Erro inesperado"] } });
+    } finally {
+      setIsConfirmLoading(false);
     }
-  }, [confirmState]);
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        <BackgroundEffects />
-        <div className="w-full max-w-md animate-slide-up">
-          <div className="bg-card border border-border rounded-2xl p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-            <div className="relative z-10">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/20 flex items-center justify-center">
-                <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Conta Criada!</h2>
-              <p className="text-muted mb-6">Sua conta foi criada com sucesso. Agora você pode entrar.</p>
-              <Link
-                href="/login"
-                className="inline-flex w-full items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary-hover text-background font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-primary/20"
-              >
-                Entrar
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -102,49 +117,48 @@ function RegisterContent() {
           </div>
 
           {step === "register" ? (
-            <form action={registerAction} className="flex flex-col gap-4">
+            <form onSubmit={handleRegisterSubmit(onRegisterSubmit)} className="flex flex-col gap-4">
               <Input
                 label="Nome Completo"
-                name="name"
                 placeholder="João Silva"
-                error={registerState?.errors?.name?.[0]}
+                error={registerErrors.name?.message || registerState?.errors?.name?.[0]}
+                {...registerField("name")}
               />
 
               <Input
                 label="E-mail"
                 type="email"
-                name="email"
                 placeholder="joao@exemplo.com"
-                error={registerState?.errors?.email?.[0]}
+                error={registerErrors.email?.message || registerState?.errors?.email?.[0]}
                 required
-                onChange={(e) => setEmail(e.target.value)}
+                {...registerField("email")}
               />
 
               <Input
                 label="Senha"
                 type="password"
-                name="password"
                 placeholder="••••••••"
                 hint={!registerState?.errors?.password ? "Mínimo de 8 caracteres" : undefined}
-                error={registerState?.errors?.password?.[0]}
+                error={registerErrors.password?.message || registerState?.errors?.password?.[0]}
                 required
+                {...registerField("password")}
               />
 
               <Input
                 label="Confirmar Senha"
                 type="password"
-                name="password_confirmation"
                 placeholder="••••••••"
-                error={registerState?.errors?.password_confirmation?.[0]}
+                error={registerErrors.password_confirmation?.message || registerState?.errors?.password_confirmation?.[0]}
                 required
+                {...registerField("password_confirmation")}
               />
 
               {registerState?.errors?._form && (
                 <Alert variant="error">{registerState.errors._form[0]}</Alert>
               )}
 
-              <Button type="submit" loading={registerPending} fullWidth disabled={registerPending}>
-                {registerPending ? "Enviando..." : (
+              <Button type="submit" loading={isRegisterLoading} fullWidth disabled={isRegisterLoading}>
+                {isRegisterLoading ? "Enviando..." : (
                   <>
                     Continuar
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,9 +169,8 @@ function RegisterContent() {
               </Button>
             </form>
           ) : (
-            <form action={confirmAction} className="space-y-6">
-              <input type="hidden" name="email" value={email} />
-              <input type="hidden" name="confirmation_code" value={confirmationCode.join("")} />
+            <form onSubmit={onConfirmSubmit} className="space-y-6">
+              {/* No hidden inputs here anymore! State is in memory (email, confirmationCode) */}
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 flex items-center justify-center">
                   <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +187,7 @@ function RegisterContent() {
               <CodeInput
                 value={confirmationCode}
                 onChange={setConfirmationCode}
-                disabled={confirmPending}
+                disabled={isConfirmLoading}
               />
 
               <p className="text-center text-xs text-muted">
@@ -188,8 +201,8 @@ function RegisterContent() {
                 <Alert variant="error" className="text-center">{confirmState.errors.confirmation_code[0]}</Alert>
               )}
 
-              <Button type="submit" loading={confirmPending} fullWidth disabled={confirmPending}>
-                {confirmPending ? "Verificando..." : "Verificar e Criar Conta"}
+              <Button type="submit" loading={isConfirmLoading} fullWidth disabled={isConfirmLoading}>
+                {isConfirmLoading ? "Verificando..." : "Verificar e Criar Conta"}
               </Button>
 
               <Button

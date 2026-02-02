@@ -12,8 +12,14 @@ interface EditWorkspaceModalProps {
     currentName: string;
 }
 
-interface EditWorkspaceFormData {
-    name: string;
+import { yupResolver } from "@hookform/resolvers/yup";
+import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
+
+interface EditWorkspaceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    workspaceId: string;
+    currentName: string;
 }
 
 export function EditWorkspaceModal({
@@ -31,23 +37,20 @@ export function EditWorkspaceModal({
         handleSubmit,
         formState: { errors },
         reset,
-    } = useForm<EditWorkspaceFormData>({
+    } = useForm<WorkspaceFormData>({
+        resolver: yupResolver(workspaceSchema),
         defaultValues: {
             name: currentName,
         },
         mode: "onBlur",
     });
 
-    const onSubmit = async (data: EditWorkspaceFormData) => {
+    const onSubmit = async (data: WorkspaceFormData) => {
         setLoading(true);
         setError("");
 
-        const formData = new FormData();
-        formData.append("workspaceId", workspaceId);
-        formData.append("name", data.name);
-
         try {
-            const result = await updateWorkspaceName(undefined, formData);
+            const result = await updateWorkspaceName(undefined, { workspaceId, name: data.name });
 
             if (result.errors?._form) {
                 setError(result.errors._form[0]);
@@ -56,6 +59,10 @@ export function EditWorkspaceModal({
             }
 
             if (result.errors?.name) {
+                // Manually set error to field if needed, or rely on formState errors if server returned field error
+                // but since we validated locally, server errors might be specific
+                // However, with yupResolver, generic errors are handled.
+                // For simplicity, let's keep error state for server errors.
                 setError(result.errors.name[0]);
                 setLoading(false);
                 return;
@@ -91,17 +98,7 @@ export function EditWorkspaceModal({
                     error={errors.name?.message}
                     required
                     autoFocus
-                    {...register("name", {
-                        required: "Nome é obrigatório",
-                        minLength: {
-                            value: 2,
-                            message: "Nome deve ter pelo menos 2 caracteres",
-                        },
-                        maxLength: {
-                            value: 255,
-                            message: "Nome deve ter no máximo 255 caracteres",
-                        },
-                    })}
+                    {...register("name")}
                 />
 
                 {error && <Alert variant="error">{error}</Alert>}

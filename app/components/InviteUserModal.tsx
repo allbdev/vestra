@@ -4,15 +4,14 @@ import { useForm } from "react-hook-form";
 import { Button, Input, Alert, Modal } from "./ui";
 import { inviteUser } from "@/app/actions/workspace";
 
+import { yupResolver } from "@hookform/resolvers/yup";
+import { inviteUserSchema, InviteUserFormData } from "@/app/lib/schemas";
+
 interface InviteUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   workspaceId: string;
   onInviteSent: () => void;
-}
-
-interface InviteUserFormData {
-  email: string;
 }
 
 export function InviteUserModal({
@@ -30,6 +29,7 @@ export function InviteUserModal({
     formState: { errors },
     reset,
   } = useForm<InviteUserFormData>({
+    resolver: yupResolver(inviteUserSchema),
     mode: "onBlur",
   });
 
@@ -77,13 +77,7 @@ export function InviteUserModal({
           error={errors.email?.message}
           required
           autoFocus
-          {...register("email", {
-            required: "E-mail é obrigatório",
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Formato de e-mail inválido",
-            },
-          })}
+           {...register("email")}
         />
 
         {error && <Alert variant="error">{error}</Alert>}

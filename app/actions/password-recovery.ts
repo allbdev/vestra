@@ -204,12 +204,6 @@ export async function resetPassword(
         // Delete token
         await db.passwordResetToken.delete({ where: { id: storedToken.id } });
 
-        // We can't redirect directly inside a try-catch block if we want to return state, 
-        // but here we want to redirect on success.
-        // However, pattern with useActionState often prefers returning success state 
-        // and letting client handle redirect or showing success message.
-        // Let's return success true and let the client component redirect or show a "Go to login" button.
-
         return {
             success: true,
             message: "Senha redefinida com sucesso! Você pode fazer login agora.",

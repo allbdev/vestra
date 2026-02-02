@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/app/components/ui";
 import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import { CategoryFormModal } from "@/app/components/categories/CategoryFormModal";
@@ -134,6 +134,8 @@ function CategoryItem({
 }) {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isDeleting, startDeleteTransition] = useTransition();
+    const [deleteState, setDeleteState] = useState<CategoryActionState | null>(null);
 
     const canManage = isWorkspaceOwner || category.ownerId === currentUserId;
 
@@ -142,20 +144,18 @@ function CategoryItem({
         return await updateCategory(workspaceId, category.id, state, formData);
     };
 
-    const deleteAction = async (state: CategoryActionState | undefined, formData: FormData) => {
-        return await deleteCategory(workspaceId, category.id, state, formData);
+    const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        startDeleteTransition(async () => {
+            const res = await deleteCategory(workspaceId, category.id);
+
+            if (res.success) {
+                setIsDeleteOpen(false);
+            } else {
+                setDeleteState(res);
+            }
+        });
     };
-
-    // Delete handling with useActionState
-    const [deleteState, handleDeleteAction, deletePending] = useActionState(deleteAction, undefined);
-
-    // Close delete modal on success
-    useEffect(() => {
-        if (deleteState?.success) {
-            setIsDeleteOpen(false);
-        }
-    }, [deleteState?.success]);
-
 
     return (
         <li className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group">
@@ -200,23 +200,23 @@ function CategoryItem({
                     isOpen={isDeleteOpen}
                     onClose={() => setIsDeleteOpen(false)}
                 >
-                    <form action={handleDeleteAction}>
+                    <form onSubmit={handleDelete}>
                         <div className="flex justify-end gap-3 pt-4">
                             <Button
                                 type="button"
                                 variant="secondary"
                                 onClick={() => setIsDeleteOpen(false)}
-                                disabled={deletePending}
+                                disabled={isDeleting}
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 variant="destructive"
-                                disabled={deletePending}
-                                loading={deletePending}
+                                disabled={isDeleting}
+                                loading={isDeleting}
                             >
-                                {deletePending ? "Excluindo..." : "Excluir"}
+                                {isDeleting ? "Excluindo..." : "Excluir"}
                             </Button>
                         </div>
                         {deleteState?.errors?._form && (

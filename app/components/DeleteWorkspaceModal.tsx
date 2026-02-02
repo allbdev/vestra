@@ -23,11 +23,8 @@ export function DeleteWorkspaceModal({
         setLoading(true);
         setError("");
 
-        const formData = new FormData();
-        formData.append("workspaceId", workspaceId);
-
         try {
-            const result = await deleteWorkspace(undefined, formData);
+            const result = await deleteWorkspace(undefined, { workspaceId });
 
             if (result.errors?._form) {
                 setError(result.errors._form[0]);

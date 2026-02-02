@@ -22,7 +22,17 @@ export interface CategoryActionState {
         _form?: string[];
     };
     success?: boolean;
-    data?: any;
+    data?: {
+        type: number;
+        name: string;
+        color: string | null;
+        id: string;
+        ownerId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        workspaceId: string;
+    };
 }
 
 export async function createCategory(
@@ -160,14 +170,12 @@ export async function updateCategory(
 export async function deleteCategory(
     workspaceId: string,
     categoryId: string,
-    _prevState: CategoryActionState | undefined,
-    _formData: FormData
 ): Promise<CategoryActionState> {
     const user = await verifySession();
     if (!user) {
         return { errors: { _form: ["Não autorizado"] } };
     }
-
+        
     // Verify category ownership or workspace ownership
     const category = await prisma.category.findUnique({
         where: { id: categoryId },

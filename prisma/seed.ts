@@ -22,10 +22,12 @@ async function main() {
 
     const proPlan = await prisma.plan.upsert({
         where: { name: 'pro' },
-        update: {},
+        update: {
+            price: 19.90,
+        },
         create: {
             name: 'pro',
-            price: 10,
+            price: 19.90,
             isDefault: false,
         },
     })

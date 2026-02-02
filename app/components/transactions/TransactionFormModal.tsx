@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
 import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionActionState } from "@/app/actions/transactions";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { transactionSchema, TransactionFormData } from "@/app/lib/schemas";
 
+// ... existing interfaces ...
 interface Category {
     id: string;
     name: string;
@@ -75,76 +79,105 @@ function TransactionFormModalContent({
     recurrencies,
     action,
 }: TransactionFormModalProps) {
-    const [state, formAction, pending] = useActionState(action, undefined);
+    const [serverError, setServerError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-    const [selectedRecurrencyId, setSelectedRecurrencyId] = useState<string>("");
-    const [description, setDescription] = useState<string>("");
-    const [amount, setAmount] = useState<string>("");
-    const [isPaid, setIsPaid] = useState<boolean>(false);
-    const [date, setDate] = useState<string>("");
-    const [paidAt, setPaidAt] = useState<string>("");
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm({
+        resolver: yupResolver(transactionSchema),
+        defaultValues: {
+            description: "",
+            amount: undefined,
+            categoryId: "",
+            isPaid: false,
+            date: new Date().toISOString().split('T')[0],
+            paidAt: null,
+        },
+    });
+
+    const isPaid = watch("isPaid");
 
     useEffect(() => {
         if (transactionToEdit) {
-            setSelectedCategoryId(transactionToEdit.categoryId || "");
-            setDescription(transactionToEdit.description);
-            setAmount(transactionToEdit.amount.toString());
-            setIsPaid(transactionToEdit.isPaid);
-            // Format date for input (YYYY-MM-DD)
-            const transactionDate = new Date(transactionToEdit.date);
-            setDate(transactionDate.toISOString().split('T')[0]);
-            // Format paidAt if exists
-            if (transactionToEdit.paidAt) {
-                const paidDate = new Date(transactionToEdit.paidAt);
-                setPaidAt(paidDate.toISOString().split('T')[0]);
-            } else {
-                setPaidAt("");
-            }
+            reset({
+                description: transactionToEdit.description,
+                amount: transactionToEdit.amount,
+                categoryId: transactionToEdit.categoryId || "",
+                date: new Date(transactionToEdit.date).toISOString().split('T')[0],
+                isPaid: transactionToEdit.isPaid,
+                paidAt: transactionToEdit.paidAt ? new Date(transactionToEdit.paidAt).toISOString().split('T')[0] : null,
+            });
         } else if (initialData) {
-            // Cloning logic
-            setSelectedCategoryId(initialData.categoryId || "");
-            setDescription(initialData.description || "");
-            setAmount(initialData.amount ? initialData.amount.toString() : "");
-            setIsPaid(false); // Clone usually starts unpaid? Or copy state? Request said "pre-filled", implies copy. But let's defaulting to current day for new transaction usually, but maybe keep original date?
-            // "pre-filled" usually means copy everything as is, but maybe date should be today?
-            // Let's assume date is today (new transaction) but other data is copied.
-            setDate(new Date().toISOString().split('T')[0]);
-            setPaidAt(""); // Reset payment date
-            // If user wants to clone exactly, they can edit date.
+            reset({
+                description: initialData.description || "",
+                amount: initialData.amount,
+                categoryId: initialData.categoryId || "",
+                date: new Date().toISOString().split('T')[0],
+                isPaid: false,
+                paidAt: null,
+            });
         } else {
-            // Reset form when opening for creation (and no recurrency selected yet)
-            setSelectedCategoryId("");
-            setDescription("");
-            setAmount("");
-            setIsPaid(false);
-            // Default to today
-            setDate(new Date().toISOString().split('T')[0]);
-            setPaidAt("");
-            // Reset recurrency selection if opening fresh
-            if (isOpen) setSelectedRecurrencyId("");
+             reset({
+                description: "",
+                amount: undefined, 
+                categoryId: "",
+                date: new Date().toISOString().split('T')[0],
+                isPaid: false,
+                paidAt: null,
+            });
         }
-    }, [transactionToEdit, initialData, isOpen]);
+    }, [transactionToEdit, initialData, isOpen, reset]);
 
-    // Handle recurrency selection
     const handleRecurrencyChange = (recurrencyId: string) => {
-        setSelectedRecurrencyId(recurrencyId);
         if (!recurrencyId) return;
 
-        const recurrency = recurrencies?.find(r => r.id === recurrencyId);
+        const recurrency = recurrencies?.find((r) => r.id === recurrencyId);
         if (recurrency) {
-            // Update form fields
-            setDescription(recurrency.description);
-            setAmount(recurrency.baseAmount.toString());
-            setSelectedCategoryId(recurrency.categoryId || "");
+            setValue("description", recurrency.description);
+            setValue("amount", recurrency.baseAmount);
+            setValue("categoryId", recurrency.categoryId || "");
         }
     };
 
-    useEffect(() => {
-        if (state?.success) {
-            onClose();
+    const onSubmit = async (data: TransactionFormData) => {
+        setIsSubmitting(true);
+        setServerError(null);
+
+        const formData = new FormData();
+        formData.append("description", data.description);
+        formData.append("amount", data.amount.toString());
+        formData.append("categoryId", data.categoryId);
+        formData.append("date", data.date);
+        formData.append("isPaid", data.isPaid ? "true" : "false");
+        if (data.paidAt) {
+            formData.append("paidAt", data.paidAt);
         }
-    }, [state?.success, onClose]);
+
+        try {
+            const result = await action(undefined, formData);
+            if (result?.success) {
+                onClose();
+            } else if (result?.errors) {
+                // Determine if it's a form-level error or field error
+                if (result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                }
+                // We could map server field errors back to RHF using setError here if we wanted precise field feedback from server
+            }
+        } catch (error) {
+            setServerError("Ocorreu um erro ao salvar.");
+            console.error(error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <Modal
@@ -152,124 +185,142 @@ function TransactionFormModalContent({
             isOpen={isOpen}
             onClose={onClose}
         >
-            <form
-                action={formAction}
-                className="flex flex-col gap-4"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-8">
-                    {/* Recurrency Selector - Only show for new transactions */}
                     {!transactionToEdit && recurrencies && recurrencies.length > 0 && (
                         <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                             <Select
                                 label="Preencher com Recorrência (Opcional)"
                                 name="recurrencyId"
                                 id="recurrencyId"
-                                value={selectedRecurrencyId}
                                 onChange={(e) => handleRecurrencyChange(e.target.value as string)}
                                 options={[
                                     { value: "", label: "Criar em branco" },
                                     ...recurrencies.map((r) => ({
                                         value: r.id,
-                                        label: `${r.description} - R$ ${r.baseAmount}`
-                                    }))
+                                        label: `${r.description} - R$ ${r.baseAmount}`,
+                                    })),
                                 ]}
                             />
                         </div>
                     )}
-                    {/* Hidden Inputs for controlled states */}
-                    <input type="hidden" name="categoryId" value={selectedCategoryId} />
-                    <input type="hidden" name="isPaid" value={isPaid ? "true" : "false"} />
-                    <input type="hidden" name="paidAt" value={paidAt || ""} />
 
                     <Input
                         autoFocus
-                        type="text"
-                        name="description"
-                        id="description"
                         label="Descrição"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
                         placeholder="Ex: Salário, Aluguel..."
                         required
-                        error={state?.errors?.description?.[0]}
+                        error={errors.description?.message}
+                        {...register("description")}
                     />
 
-                    {/* Hidden input for raw amount sending to server */}
-                    <input type="hidden" name="amount" value={amount} />
-
-                    <MoneyInput
-                        name="amount_display"
-                        id="amount"
-                        label="Valor"
-                        value={amount}
-                        onChange={setAmount}
-                        required
-                        error={state?.errors?.amount?.[0]}
+                    <Controller
+                        name="amount"
+                        control={control}
+                        render={({ field }) => (
+                            <MoneyInput
+                                name={field.name}
+                                id="amount"
+                                label="Valor"
+                                value={field.value !== undefined ? field.value.toString() : ""}
+                                onChange={(val) => {
+                                    // Handle string to number if needed, but MoneyInput typically gives raw string? 
+                                    // Assuming MoneyInput expects string and returns string. 
+                                    // The schema uses .transform to handle comma/dot.
+                                    field.onChange(val); 
+                                }}
+                                required
+                                error={errors.amount?.message}
+                            />
+                        )}
                     />
 
-                    <Select
-                        label="Categoria"
+                    <Controller
                         name="categoryId"
-                        required
-                        id="categoryId"
-                        value={selectedCategoryId}
-                        onChange={(e) => setSelectedCategoryId(e.target.value as string)}
-                        options={[
-                            { value: "", label: "Selecione uma categoria" },
-                            ...categories.map((category) => ({
-                                value: category.id,
-                                label: category.type === CATEGORY_TYPES.INCOME ? `💰 ${category.name} - (Receita)` : `💸 ${category.name} - (Despesa)`,
-                            }))
-                        ]}
-                        error={state?.errors?.categoryId?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                label="Categoria"
+                                id="categoryId"
+                                value={field.value}
+                                onChange={field.onChange}
+                                required
+                                error={errors.categoryId?.message}
+                                options={[
+                                    { value: "", label: "Selecione uma categoria" },
+                                    ...categories.map((category) => ({
+                                        value: category.id,
+                                        label:
+                                            category.type === CATEGORY_TYPES.INCOME
+                                                ? `💰 ${category.name} - (Receita)`
+                                                : `💸 ${category.name} - (Despesa)`,
+                                    })),
+                                ]}
+                            />
+                        )}
                     />
 
                     <div>
-                        <DatePicker
-                            value={date}
-                            onChange={setDate}
-                            label="Data"
-                            required
-                            error={!!state?.errors?.date?.[0]}
-                            helperText={state?.errors?.date?.[0]}
+                         <Controller
+                            name="date"
+                            control={control}
+                            render={({ field }) => (
+                                <DatePicker
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    label="Data"
+                                    required
+                                    error={!!errors.date}
+                                    helperText={errors.date?.message}
+                                />
+                            )}
                         />
-                        <input type="hidden" name="date" value={date} />
                     </div>
 
-                    <Checkbox
+                    <Controller
                         name="isPaid"
-                        label="Pago"
-                        checked={isPaid}
-                        onChange={(e) => setIsPaid(e.target.checked)}
-                        error={state?.errors?.isPaid?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Checkbox
+                                label="Pago"
+                                checked={field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                                error={errors.isPaid?.message}
+                            />
+                        )}
                     />
 
                     {isPaid && (
                         <div>
-                            <DatePicker
-                                value={paidAt}
-                                onChange={setPaidAt}
-                                label="Data de Pagamento"
-                                error={!!state?.errors?.paidAt?.[0]}
-                                helperText={state?.errors?.paidAt?.[0]}
+                             <Controller
+                                name="paidAt"
+                                control={control}
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value || ""}
+                                        onChange={field.onChange}
+                                        label="Data de Pagamento"
+                                        error={!!errors.paidAt}
+                                        helperText={errors.paidAt?.message}
+                                    />
+                                )}
                             />
-                            <input type="hidden" name="paidAt" value={paidAt || ""} />
                         </div>
                     )}
                 </div>
 
-                {state?.errors?._form && (
+                {serverError && (
                     <div className="p-3 rounded-lg bg-red-500/10 text-red-600 text-sm">
-                        {state.errors._form[0]}
+                        {serverError}
                     </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
+                    <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
                         Cancelar
                     </Button>
-                    <Button type="submit" disabled={pending} loading={pending}>
-                        {pending ? "Salvando..." : "Salvar"}
+                    <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+                        {isSubmitting ? "Salvando..." : "Salvar"}
                     </Button>
                 </div>
             </form>

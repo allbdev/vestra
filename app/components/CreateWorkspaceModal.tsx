@@ -1,7 +1,10 @@
 
-import { useActionState } from "react";
-import { Button, Input, Alert, Modal } from "./ui";
-import { createWorkspace } from "../actions/workspace";
+import { useState } from "react";
+import { Button, Input, Alert, Modal } from "./ui"; // Assuming Modal is exported from ./ui based on view_file
+import { createWorkspace, WorkspaceFormState } from "../actions/workspace";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
 
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -9,10 +12,43 @@ interface CreateWorkspaceModalProps {
 }
 
 export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalProps) {
-  const [state, action, pending] = useActionState(createWorkspace, undefined);
+  const [formState, setFormState] = useState<WorkspaceFormState>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+      register,
+      handleSubmit,
+      reset,
+      formState: { errors },
+  } = useForm({
+      resolver: yupResolver(workspaceSchema),
+      defaultValues: {
+          name: "",
+      },
+  });
+
+  const onSubmit = async (data: WorkspaceFormData) => {
+      setIsSubmitting(true);
+      setFormState({});
+      try {
+          const result = await createWorkspace(undefined, data);
+          setFormState(result);
+          if (!result?.errors && !result?.limitReached) {
+              onClose();
+              reset();
+          }
+      } catch (error) {
+          console.error(error);
+          setFormState({ errors: { _form: ["Erro inesperado"] } });
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
 
   const handleCancel = () => {
     onClose();
+    reset();
+    setFormState({});
   };
 
   return (
@@ -22,21 +58,24 @@ export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalPr
       title="Criar Workspace"
       description="Crie um novo workspace para gerenciar suas finanças"
     >
-      <form action={action} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <Input
           label="Nome do Workspace"
-          name="name"
           placeholder="Ex: Finanças da Família"
-          error={state?.errors?.name?.[0]}
-          required
+          error={errors.name?.message || formState?.errors?.name?.[0]}
           autoFocus
+          {...register("name")}
         />
 
-        {state?.errors?.name && (
-          <Alert variant="error">{state.errors.name[0]}</Alert>
+        {formState?.errors?._form && (
+          <Alert variant="error">{formState.errors._form[0]}</Alert>
         )}
-        {state?.errors?._form && (
-          <Alert variant="error">{state.errors._form[0]}</Alert>
+
+        {formState?.limitReached && (
+           <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
+               <p className="font-semibold">Limite Atingido</p>
+               <p>Você atingiu o limite de workspaces do seu plano.</p>
+           </div>
         )}
 
         <div className="flex justify-end gap-3 pt-4">
@@ -44,11 +83,11 @@ export function CreateWorkspaceModal({ isOpen, onClose }: CreateWorkspaceModalPr
             type="button"
             variant="secondary"
             onClick={handleCancel}
-            disabled={pending}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
-          <Button type="submit" loading={pending} disabled={pending}>
+          <Button type="submit" loading={isSubmitting} disabled={isSubmitting}>
             Criar
           </Button>
         </div>

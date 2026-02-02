@@ -4,25 +4,11 @@ import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { db as prisma } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/session";
-import { z } from "zod";
-
-const transactionSchema = z.object({
-    description: z.string().min(1, "A descrição é obrigatória").max(255),
-    amount: z.string().refine(
-        (val) => !isNaN(Number(val)) && Number(val) > 0,
-        "O valor deve ser um número positivo"
-    ),
-    categoryId: z.string().uuid("Categoria inválida"),
-    date: z.string().refine(
-        (val) => !isNaN(Date.parse(val)),
-        "Data inválida"
-    ),
-    isPaid: z.boolean().optional(),
-    paidAt: z.string().optional().nullable(),
-});
+import * as yup from "yup";
+import { transactionSchema, TransactionFormData } from "@/app/lib/schemas";
 
 // Types for action state
-export interface TransactionActionState {
+export type TransactionActionState = {
     errors?: {
         description?: string[];
         amount?: string[];
@@ -34,19 +20,14 @@ export interface TransactionActionState {
     };
     success?: boolean;
     data?: any;
-}
+};
 
 function serializeTransaction(transaction: any) {
     return {
-        id: transaction.id,
-        workspaceId: transaction.workspaceId,
-        ownerId: transaction.ownerId,
-        categoryId: transaction.categoryId,
-        templateId: transaction.templateId,
-        description: transaction.description,
-        amount: Number(transaction.amount),
+        ...transaction,
+        amount: transaction.amount.toNumber(),
+        // Convert dates to ISO strings for client components
         date: transaction.date.toISOString(),
-        isPaid: transaction.isPaid,
         paidAt: transaction.paidAt ? transaction.paidAt.toISOString() : null,
         createdAt: transaction.createdAt.toISOString(),
         updatedAt: transaction.updatedAt.toISOString(),
@@ -110,17 +91,30 @@ export async function createTransaction(
     const isPaid = isPaidValue === "true" || isPaidValue === "on";
     const paidAtDate = paidAt && paidAt !== "" ? new Date(paidAt) : null;
 
-    const validation = transactionSchema.safeParse({
+    const rawData = {
         description,
         amount,
         categoryId,
         date,
         isPaid,
         paidAt: paidAtDate ? paidAtDate.toISOString() : null,
-    });
+    };
 
-    if (!validation.success) {
-        return { errors: validation.error.flatten().fieldErrors };
+    let validatedData;
+    try {
+        validatedData = await transactionSchema.validate(rawData, { abortEarly: false });
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const errors: TransactionActionState["errors"] = {};
+            error.inner.forEach((err) => {
+                if (err.path) {
+                    // @ts-ignore - Dynamic key assignment
+                    errors[err.path] = [err.message];
+                }
+            });
+            return { errors };
+        }
+        return { errors: { _form: ["Erro de validação"] } };
     }
 
     // Verify category exists and belongs to workspace
@@ -137,11 +131,11 @@ export async function createTransaction(
             data: {
                 workspaceId,
                 ownerId: user.id,
-                description: validation.data.description,
-                amount: validation.data.amount,
-                categoryId: validation.data.categoryId,
-                date: new Date(validation.data.date),
-                isPaid: validation.data.isPaid ?? false,
+                description: validatedData.description,
+                amount: validatedData.amount,
+                categoryId: validatedData.categoryId,
+                date: new Date(validatedData.date),
+                isPaid: validatedData.isPaid || false,
                 paidAt: paidAtDate,
             },
         });
@@ -199,18 +193,32 @@ export async function updateTransaction(
     const isPaid = isPaidValue === "true" || isPaidValue === "on";
     const paidAtDate = paidAt && paidAt !== "" ? new Date(paidAt) : null;
 
-    const validation = transactionSchema.safeParse({
+    const rawData = {
         description,
         amount,
         categoryId,
         date,
         isPaid,
         paidAt: paidAtDate ? paidAtDate.toISOString() : null,
-    });
+    };
 
-    if (!validation.success) {
-        return { errors: validation.error.flatten().fieldErrors };
+    let validatedData;
+    try {
+        validatedData = await transactionSchema.validate(rawData, { abortEarly: false });
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const errors: TransactionActionState["errors"] = {};
+            error.inner.forEach((err) => {
+                if (err.path) {
+                    // @ts-ignore - Dynamic key assignment
+                    errors[err.path] = [err.message];
+                }
+            });
+            return { errors };
+        }
+        return { errors: { _form: ["Erro de validação"] } };
     }
+
 
     // Verify category exists and belongs to workspace
     const category = await prisma.category.findUnique({
@@ -225,12 +233,12 @@ export async function updateTransaction(
         await prisma.transaction.update({
             where: { id: transactionId },
             data: {
-                description: validation.data.description,
-                amount: validation.data.amount,
-                categoryId: validation.data.categoryId,
-                date: new Date(validation.data.date),
-                isPaid: validation.data.isPaid ?? false,
-                paidAt: paidAtDate,
+                description: validatedData.description,
+                amount: validatedData.amount,
+                categoryId: validatedData.categoryId,
+                date: new Date(validatedData.date),
+                isPaid: validatedData.isPaid ?? false,
+                paidAt: validatedData.paidAt ? new Date(validatedData.paidAt) : null,
             },
         });
 

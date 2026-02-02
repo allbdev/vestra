@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
 import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionTemplateActionState } from "@/app/actions/transaction-templates";
 import { FREQUENCY_TYPES, CATEGORY_TYPES } from "@/app/lib/consts";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { transactionTemplateSchema, TransactionTemplateFormData } from "@/app/lib/schemas";
 
 interface Category {
     id: string;
@@ -66,38 +69,79 @@ function RecurrencyFormModalContent({
     categories,
     action,
 }: RecurrencyFormModalProps) {
-    const [state, formAction, pending] = useActionState(action, undefined);
+    const [serverError, setServerError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-    const [selectedFrequency, setSelectedFrequency] = useState<number | null>(FREQUENCY_TYPES.MONTHLY);
-    const [isActive, setIsActive] = useState<boolean>(true);
-    const [startDate, setStartDate] = useState<string>("");
-    const [baseAmount, setBaseAmount] = useState<string>("");
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        formState: { errors },
+    } = useForm({
+        resolver: yupResolver(transactionTemplateSchema),
+        defaultValues: {
+            description: "",
+            baseAmount: undefined,
+            categoryId: "",
+            frequency: FREQUENCY_TYPES.MONTHLY,
+            startDate: new Date().toISOString().split('T')[0],
+            active: true,
+        },
+    });
 
     useEffect(() => {
         if (templateToEdit) {
-            setSelectedCategoryId(templateToEdit.categoryId || "");
-            setSelectedFrequency(templateToEdit.frequency);
-            setIsActive(templateToEdit.active);
-            setBaseAmount(templateToEdit.baseAmount.toString());
-            // Format date for input (YYYY-MM-DD)
-            const date = new Date(templateToEdit.startDate);
-            setStartDate(date.toISOString().split('T')[0]);
+            reset({
+                description: templateToEdit.description,
+                baseAmount: templateToEdit.baseAmount,
+                categoryId: templateToEdit.categoryId || "",
+                frequency: templateToEdit.frequency ?? undefined,
+                startDate: new Date(templateToEdit.startDate).toISOString().split('T')[0],
+                active: templateToEdit.active,
+            });
         } else {
-            setSelectedCategoryId("");
-            setSelectedFrequency(FREQUENCY_TYPES.MONTHLY);
-            setIsActive(true);
-            setBaseAmount("");
-            // Default to today
-            setStartDate(new Date().toISOString().split('T')[0]);
+            reset({
+                description: "",
+                baseAmount: undefined,
+                categoryId: "",
+                frequency: FREQUENCY_TYPES.MONTHLY,
+                startDate: new Date().toISOString().split('T')[0],
+                active: true,
+            });
         }
-    }, [templateToEdit, isOpen]);
+    }, [templateToEdit, isOpen, reset]);
 
-    useEffect(() => {
-        if (state?.success) {
-            onClose();
+    const onSubmit = async (data: TransactionTemplateFormData) => {
+        setIsSubmitting(true);
+        setServerError(null);
+
+        const formData = new FormData();
+        formData.append("description", data.description);
+        formData.append("baseAmount", data.baseAmount.toString());
+        formData.append("categoryId", data.categoryId);
+        formData.append("frequency", data.frequency.toString());
+        formData.append("startDate", data.startDate);
+        if (data.active !== undefined) {
+             formData.append("active", data.active ? "true" : "false");
         }
-    }, [state?.success, onClose]);
+
+        try {
+            const result = await action(undefined, formData);
+            if (result?.success) {
+                onClose();
+            } else if (result?.errors) {
+                if (result.errors._form) {
+                    setServerError(result.errors._form[0]);
+                }
+            }
+        } catch (error) {
+            setServerError("Ocorreu um erro ao salvar.");
+            console.error(error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <Modal
@@ -105,103 +149,110 @@ function RecurrencyFormModalContent({
             isOpen={isOpen}
             onClose={onClose}
         >
-            <form
-                action={formAction}
-                className="flex flex-col gap-4"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-8">
-                    {/* Hidden Inputs for controlled states */}
-
-
                     <Input
                         autoFocus
                         type="text"
-                        name="description"
-                        id="description"
                         label="Descrição"
-                        defaultValue={templateToEdit?.description}
                         placeholder="Ex: Salário, Aluguel..."
-                        required
-                        error={state?.errors?.description?.[0]}
+                        error={errors.description?.message}
+                        {...register("description")}
                     />
 
-                    {/* Hidden input for raw amount sending to server */}
-                    <input type="hidden" name="baseAmount" value={baseAmount} />
-
-                    <MoneyInput
-                        name="baseAmount_display"
-                        id="baseAmount"
-                        label="Valor Base"
-                        value={baseAmount}
-                        onChange={setBaseAmount}
-                        required
-                        error={state?.errors?.baseAmount?.[0]}
+                    <Controller
+                        name="baseAmount"
+                        control={control}
+                        render={({ field }) => (
+                            <MoneyInput
+                                id="baseAmount"
+                                label="Valor Base"
+                                value={field.value !== undefined ? field.value.toString() : ""}
+                                onChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                                error={errors.baseAmount?.message}
+                            />
+                        )}
                     />
 
-                    <Select
-                        label="Categoria"
+                    <Controller
                         name="categoryId"
-                        required
-                        id="categoryId"
-                        value={selectedCategoryId}
-                        onChange={(e) => setSelectedCategoryId(e.target.value as string)}
-                        options={[
-                            { value: "", label: "Selecione uma categoria" },
-                            ...categories.map((category) => ({
-                                value: category.id,
-                                label: category.type === CATEGORY_TYPES.INCOME ? `💰 ${category.name} - (Receita)` : `💸 ${category.name} - (Despesa)`,
-                            }))
-                        ]}
-                        error={state?.errors?.categoryId?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                id="categoryId"
+                                label="Categoria"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                error={errors.categoryId?.message}
+                                options={[
+                                    { value: "", label: "Selecione uma categoria" },
+                                    ...categories.map((category) => ({
+                                        value: category.id,
+                                        label: category.type === CATEGORY_TYPES.INCOME ? `💰 ${category.name} - (Receita)` : `💸 ${category.name} - (Despesa)`
+                                    }))
+                                ]}
+                            />
+                        )}
                     />
 
-                    <Select
-                        label="Frequência"
+                    <Controller
                         name="frequency"
-                        value={selectedFrequency || ""}
-                        onChange={(e) => setSelectedFrequency(e.target.value ? Number(e.target.value) : null)}
-                        options={Object.entries(FREQUENCY_LABELS).map(([value, label]) => ({
-                            value: Number(value),
-                            label: label,
-                        }))}
-                        required
-                        error={state?.errors?.frequency?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                id="frequency"
+                                label="Frequência"
+                                value={field.value ? field.value.toString() : FREQUENCY_TYPES.MONTHLY.toString()}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                error={errors.frequency?.message}
+                                options={Object.entries(FREQUENCY_LABELS).map(([value, label]) => ({
+                                    value: value,
+                                    label: label
+                                }))}
+                            />
+                        )}
                     />
 
-                    <div>
-                        <DatePicker
-                            value={startDate}
-                            onChange={setStartDate}
-                            label="Data de Início"
-                            required
+                    <Controller
+                         name="startDate"
+                         control={control}
+                         render={({ field }) => (
+                             <DatePicker
+                                 value={field.value}
+                                 onChange={field.onChange}
+                                 label="Data de Início"
+                                 error={!!errors.startDate}
+                                 helperText={errors.startDate?.message}
+                             />
+                         )}
+                    />
 
-                            error={!!state?.errors?.startDate?.[0]}
-                            helperText={state?.errors?.startDate?.[0]}
-                        />
-                        <input type="hidden" name="startDate" value={startDate} />
-                    </div>
-
-                    <Checkbox
+                    <Controller
                         name="active"
-                        label="Ativa"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        error={state?.errors?.active?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Checkbox
+                                name="active"
+                                label="Ativa"
+                                checked={field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                            />
+                        )}
                     />
                 </div>
 
-                {state?.errors?._form && (
+                {serverError && (
                     <div className="p-3 rounded-lg bg-red-500/10 text-red-600 text-sm">
-                        {state.errors._form[0]}
+                        {serverError}
                     </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
+                    <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
                         Cancelar
                     </Button>
-                    <Button type="submit" disabled={pending} loading={pending}>
-                        {pending ? "Salvando..." : "Salvar"}
+                    <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+                        {isSubmitting ? "Salvando..." : "Salvar"}
                     </Button>
                 </div>
             </form>

@@ -6,7 +6,6 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    extends: ["next/core-web-vitals", "next/typescript", "next/react-hooks"],
     rules: {
       "react-hooks/exhaustive-deps": "error",
       "@typescript-eslint/no-unused-vars": "error",
