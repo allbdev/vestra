@@ -31,14 +31,11 @@ export default async function RecurrenciesPage({
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
-    let onboardingStep = await getOnboardingStep();
-    let didCompleteStep = false;
+    const onboardingStep = await getOnboardingStep();
 
     // Auto-complete onboarding step 4 if recurrences exist
     if (templates.length > 0 && onboardingStep?.step === 4 && !onboardingStep.completed) {
         await completeOnboardingStep(4, false);
-        onboardingStep = await getOnboardingStep();
-        didCompleteStep = true;
     }
 
     return (
@@ -48,7 +45,6 @@ export default async function RecurrenciesPage({
             workspaceId={workspaceId}
             currentUserId={user.id}
             isWorkspaceOwner={isWorkspaceOwner}
-            didCompleteStep={didCompleteStep}
         />
     );
 }

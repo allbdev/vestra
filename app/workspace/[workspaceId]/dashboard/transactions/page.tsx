@@ -54,14 +54,11 @@ export default async function TransactionsPage({
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
-    let onboardingStep = await getOnboardingStep();
-    let didCompleteStep = false;
+    const onboardingStep = await getOnboardingStep();
     
     // Auto-complete onboarding step 5 if transactions exist
     if (transactions.length > 0 && onboardingStep?.step === 5 && !onboardingStep.completed) {
         await completeOnboardingStep(5, false);
-        onboardingStep = await getOnboardingStep();
-        didCompleteStep = true;
     }
 
     return (
@@ -72,7 +69,6 @@ export default async function TransactionsPage({
             currentUserId={user.id}
             isWorkspaceOwner={isWorkspaceOwner}
             defaultDateRange={{ startDate: startStr, endDate: endStr }}
-            didCompleteStep={didCompleteStep}
         />
     );
 }

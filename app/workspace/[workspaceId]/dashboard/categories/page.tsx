@@ -29,14 +29,11 @@ export default async function CategoriesPage({
     
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
-    let onboardingStep = await getOnboardingStep();
-    let didCompleteStep = false;
+    const onboardingStep = await getOnboardingStep();
     
     // Auto-complete onboarding step 3 if categories exist
     if (categories.length > 0 && onboardingStep?.step === 3 && !onboardingStep.completed) {
         await completeOnboardingStep(3, false);
-        onboardingStep = await getOnboardingStep();
-        didCompleteStep = true;
     }
 
     return (
@@ -45,7 +42,6 @@ export default async function CategoriesPage({
             workspaceId={workspaceId}
             currentUserId={user.id}
             isWorkspaceOwner={isWorkspaceOwner}
-            didCompleteStep={didCompleteStep}
         />
     );
 }

@@ -16,8 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TourWrapper } from "@/app/components/common/TourWrapper";
 import { completeOnboardingStep } from "@/app/actions/onboarding";
-import { Category } from "@/app/generated/prisma/client";
-import { TransactionTemplate } from "@/app/lib/types";
+import { Category, TransactionTemplate } from "@/app/lib/types";
 
 interface DashboardPageClientProps {
   workspaceId: string;

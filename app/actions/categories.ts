@@ -8,6 +8,7 @@ import { CATEGORY_TYPES } from "@/app/lib/consts";
 import { z } from "zod";
 
 import { completeOnboardingStep } from "@/app/actions/onboarding";
+import { Category } from "../lib/types";
 
 const categorySchema = z.object({
     name: z.string().min(1, "O nome é obrigatório").max(100),
@@ -216,7 +217,7 @@ export async function deleteCategory(
  * Get all categories for a workspace
  * CACHED: Deduplicated within a single request
  */
-export const getCategories = cache(async (workspaceId: string) => {
+export const getCategories = cache(async (workspaceId: string): Promise<Category[]> => {
     const user = await verifySession();
     if (!user) return [];
 
