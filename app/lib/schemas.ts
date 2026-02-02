@@ -74,3 +74,11 @@ export const transactionTemplateSchema = yup.object().shape({
 });
 
 export type TransactionTemplateFormData = yup.InferType<typeof transactionTemplateSchema>;
+
+export const categorySchema = yup.object().shape({
+  name: yup.string().required("Nome é obrigatório"),
+  type: yup.number().required("Tipo é obrigatório"),
+  color: yup.string().nullable().default(null),
+});
+
+export type CategoryFormData = yup.InferType<typeof categorySchema>;

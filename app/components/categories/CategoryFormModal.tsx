@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button, Input, Select } from "@/app/components/ui";
 import { Modal } from "@/app/components/ui/Modal";
 import { CategoryActionState } from "@/app/actions/categories";
 import { CATEGORY_TYPES } from "@/app/lib/consts";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { categorySchema, CategoryFormData } from "@/app/lib/schemas";
 
-interface Category {
+export interface Category {
     id: string;
     name: string;
     type: number;
@@ -18,6 +21,7 @@ interface CategoryFormModalProps {
     onClose: () => void;
     categoryToEdit?: Category | null;
     action: (state: CategoryActionState | undefined, payload: FormData) => Promise<CategoryActionState>;
+    onSuccess?: (category: Category) => void;
 }
 
 const COLORS = [
@@ -33,14 +37,14 @@ const COLORS = [
     "#64748B", // Slate
 ];
 
-export function CategoryFormModal ({
+export function CategoryFormModal({
     isOpen,
     onClose,
     categoryToEdit,
     action,
+    onSuccess,
 }: CategoryFormModalProps) {
     if (!isOpen) return null;
-
 
     return (
         <CategoryFormModalContent
@@ -48,6 +52,7 @@ export function CategoryFormModal ({
             onClose={onClose}
             categoryToEdit={categoryToEdit}
             action={action}
+            onSuccess={onSuccess}
         />
     );
 }
@@ -57,17 +62,73 @@ function CategoryFormModalContent({
     onClose,
     categoryToEdit,
     action,
+    onSuccess,
 }: CategoryFormModalProps) {
-    const [state, formAction, pending] = useActionState(action, undefined);
+    const [serverError, setServerError] = useState<string | null>(null);
+    const [isPending, startTransition] = useTransition();
 
-    const [selectedType, setSelectedType] = useState<number>(categoryToEdit ? categoryToEdit.type : CATEGORY_TYPES.EXPENSE);
-    const [selectedColor, setSelectedColor] = useState<string>(categoryToEdit ? categoryToEdit.color || COLORS[0] : COLORS[0]);
+    const {
+        register,
+        handleSubmit,
+        control,
+        reset,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm({
+        resolver: yupResolver(categorySchema),
+        defaultValues: {
+            name: "",
+            type: CATEGORY_TYPES.EXPENSE,
+            color: COLORS[0],
+        },
+    });
+
+    const selectedColor = watch("color");
 
     useEffect(() => {
-        if (state?.success) {
-            onClose();
+        if (categoryToEdit) {
+            reset({
+                name: categoryToEdit.name,
+                type: categoryToEdit.type,
+                color: categoryToEdit.color || COLORS[0],
+            });
+        } else {
+            reset({
+                name: "",
+                type: CATEGORY_TYPES.EXPENSE,
+                color: COLORS[0],
+            });
         }
-    }, [state?.success, onClose]);
+    }, [categoryToEdit, isOpen, reset]);
+
+    const onSubmit = (data: CategoryFormData) => {
+        setServerError(null);
+
+        const formData = new FormData();
+        formData.append("name", data.name);
+        formData.append("type", data.type.toString());
+        if (data.color) formData.append("color", data.color);
+
+        startTransition(async () => {
+            try {
+                const result = await action(undefined, formData);
+                if (result?.success) {
+                    if (onSuccess && result.data) {
+                        onSuccess(result.data);
+                    }
+                    onClose();
+                } else if (result?.errors) {
+                    if (result.errors._form) {
+                        setServerError(result.errors._form[0]);
+                    }
+                }
+            } catch (error) {
+                setServerError("Ocorreu um erro ao salvar.");
+                console.error(error);
+            }
+        });
+    };
 
     return (
         <Modal
@@ -75,39 +136,47 @@ function CategoryFormModalContent({
             isOpen={isOpen}
             onClose={onClose}
         >
-            <form
-                action={formAction}
-                className="space-y-6 pt-4"
-            >
+            {/* 
+              Stop propagation of clicks to prevent bubbling up to parent forms (e.g. TransactionFormModal) 
+              since Modal uses Portal but React events bubble through Portals.
+            */}
+            <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                <form 
+                    onSubmit={(e) => {
+                        e.stopPropagation();
+                        handleSubmit(onSubmit)(e);
+                    }} 
+                    className="space-y-6 pt-4"
+                >
                 <div className="flex flex-col gap-8">
-                    {/* Hidden Inputs for controlled states */}
-                    <input type="hidden" name="type" value={selectedType} />
-                    <input type="hidden" name="color" value={selectedColor} />
-
-                    <Select
-                        label="Tipo"
+                    <Controller
                         name="type"
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(Number(e.target.value))}
-                        options={[
-                            { value: CATEGORY_TYPES.INCOME, label: "Receita" },
-                            { value: CATEGORY_TYPES.EXPENSE, label: "Despesa" },
-                        ]}
-                        required
-                        error={state?.errors?.type?.[0]}
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                label="Tipo"
+                                id="type"
+                                value={field.value}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                options={[
+                                    { value: CATEGORY_TYPES.INCOME, label: "Receita" },
+                                    { value: CATEGORY_TYPES.EXPENSE, label: "Despesa" },
+                                ]}
+                                required
+                                error={errors.type?.message}
+                            />
+                        )}
                     />
 
-                        <Input
-                            autoFocus
-                            type="text"
-                            name="name"
-                            defaultValue={categoryToEdit?.name}
-                            placeholder="Ex: Alimentação, Salário..."
-                            className="w-full"
-                            required
-                            error={state?.errors?.name?.[0]}
-                            label="Nome"
-                        />
+                    <Input
+                        autoFocus
+                        label="Nome"
+                        placeholder="Ex: Alimentação, Salário..."
+                        className="w-full"
+                        required
+                        error={errors.name?.message}
+                        {...register("name")}
+                    />
 
                     <div>
                         <label className="text-sm font-medium mb-2 block">Cor</label>
@@ -116,10 +185,10 @@ function CategoryFormModalContent({
                                 <button
                                     key={color}
                                     type="button"
-                                    onClick={() => setSelectedColor(color)}
+                                    onClick={() => setValue("color", color)}
                                     className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === color
-                                        ? "border-foreground scale-110"
-                                        : "border-transparent hover:scale-105"
+                                            ? "border-foreground scale-110"
+                                            : "border-transparent hover:scale-105"
                                         }`}
                                     style={{ backgroundColor: color }}
                                 />
@@ -128,21 +197,22 @@ function CategoryFormModalContent({
                     </div>
                 </div>
 
-                {state?.errors?._form && (
+                {serverError && (
                     <div className="p-3 rounded-lg bg-red-500/10 text-red-600 text-sm">
-                        {state.errors._form[0]}
+                        {serverError}
                     </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-2">
-                    <Button type="button" variant="secondary" onClick={onClose} disabled={pending}>
+                    <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
                         Cancelar
                     </Button>
-                    <Button type="submit" disabled={pending} loading={pending}>
-                        {pending ? "Salvando..." : "Salvar"}
+                    <Button type="submit" disabled={isPending} loading={isPending}>
+                        {isPending ? "Salvando..." : "Salvar"}
                     </Button>
                 </div>
             </form>
+            </div>
         </Modal>
     );
 }

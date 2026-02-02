@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
+import { CategorySelect } from "@/app/components/categories/CategorySelect";
+import { useParams } from "next/navigation";
 import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionActionState } from "@/app/actions/transactions";
-import { CATEGORY_TYPES } from "@/app/lib/consts";
+
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { transactionSchema, TransactionFormData } from "@/app/lib/schemas";
@@ -81,6 +83,8 @@ function TransactionFormModalContent({
 }: TransactionFormModalProps) {
     const [serverError, setServerError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const params = useParams();
+    const workspaceId = params.workspaceId as string;
 
     const {
         register,
@@ -239,23 +243,15 @@ function TransactionFormModalContent({
                         name="categoryId"
                         control={control}
                         render={({ field }) => (
-                            <Select
+                            <CategorySelect
                                 label="Categoria"
                                 id="categoryId"
                                 value={field.value}
                                 onChange={field.onChange}
                                 required
                                 error={errors.categoryId?.message}
-                                options={[
-                                    { value: "", label: "Selecione uma categoria" },
-                                    ...categories.map((category) => ({
-                                        value: category.id,
-                                        label:
-                                            category.type === CATEGORY_TYPES.INCOME
-                                                ? `💰 ${category.name} - (Receita)`
-                                                : `💸 ${category.name} - (Despesa)`,
-                                    })),
-                                ]}
+                                categories={categories}
+                                workspaceId={workspaceId}
                             />
                         )}
                     />

@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Button, Input, Select, Checkbox } from "@/app/components/ui";
+import { CategorySelect } from "@/app/components/categories/CategorySelect";
+import { useParams } from "next/navigation";
 import { MoneyInput } from "@/app/components/ui/MoneyInput";
 import { Modal } from "@/app/components/ui/Modal";
 import { DatePicker } from "@/app/components/DatePicker";
 import { TransactionTemplateActionState } from "@/app/actions/transaction-templates";
-import { FREQUENCY_TYPES, CATEGORY_TYPES } from "@/app/lib/consts";
+import { FREQUENCY_TYPES } from "@/app/lib/consts";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { transactionTemplateSchema, TransactionTemplateFormData } from "@/app/lib/schemas";
@@ -71,6 +73,8 @@ function RecurrencyFormModalContent({
 }: RecurrencyFormModalProps) {
     const [serverError, setServerError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const params = useParams();
+    const workspaceId = params.workspaceId as string;
 
     const {
         register,
@@ -178,19 +182,14 @@ function RecurrencyFormModalContent({
                         name="categoryId"
                         control={control}
                         render={({ field }) => (
-                            <Select
+                            <CategorySelect
                                 id="categoryId"
                                 label="Categoria"
                                 value={field.value || ""}
-                                onChange={(e) => field.onChange(e.target.value)}
+                                onChange={(value) => field.onChange(value)}
                                 error={errors.categoryId?.message}
-                                options={[
-                                    { value: "", label: "Selecione uma categoria" },
-                                    ...categories.map((category) => ({
-                                        value: category.id,
-                                        label: category.type === CATEGORY_TYPES.INCOME ? `💰 ${category.name} - (Receita)` : `💸 ${category.name} - (Despesa)`
-                                    }))
-                                ]}
+                                categories={categories}
+                                workspaceId={workspaceId}
                             />
                         )}
                     />
