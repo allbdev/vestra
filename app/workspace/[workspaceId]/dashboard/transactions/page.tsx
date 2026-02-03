@@ -54,11 +54,12 @@ export default async function TransactionsPage({
     const categories = await getCategories(workspaceId);
     const isWorkspaceOwner = workspace.ownerId === user.id;
 
-    const onboardingStep = await getOnboardingStep();
+    let onboardingStep = await getOnboardingStep();
     
     // Auto-complete onboarding step 5 if transactions exist
     if (transactions.length > 0 && onboardingStep?.step === 5 && !onboardingStep.completed) {
         await completeOnboardingStep(5, false);
+        onboardingStep = await getOnboardingStep();
     }
 
     return (
