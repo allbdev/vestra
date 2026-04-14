@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { storageKeys } from "../lib/consts";
 import { completeOnboardingStep } from "@/app/actions/onboarding";
 import { checkWorkspaceLimit, checkInviteLimit } from "@/app/lib/subscription";
+import { mapOptionalForeignKey } from "@/app/lib/clone-workspace-maps";
 import { workspaceSchema, WorkspaceFormData } from "@/app/lib/schemas";
 import * as yup from "yup";
 
@@ -549,6 +550,210 @@ export async function deleteWorkspace(
     return {
       errors: {
         _form: ["Erro ao excluir workspace. Tente novamente."],
+      },
+    };
+  }
+}
+
+const CLONE_WORKSPACE_NAME_SUFFIX = " - clone";
+const MAX_WORKSPACE_NAME_LENGTH = 255;
+
+function buildClonedWorkspaceName(sourceName: string): string {
+  const base = `${sourceName.trim()}${CLONE_WORKSPACE_NAME_SUFFIX}`;
+  if (base.length <= MAX_WORKSPACE_NAME_LENGTH) {
+    return base;
+  }
+  return base.slice(0, MAX_WORKSPACE_NAME_LENGTH);
+}
+
+export interface CloneWorkspaceFormState {
+  errors?: {
+    _form?: string[];
+  };
+  success?: boolean;
+  newWorkspaceId?: string;
+}
+
+export async function cloneWorkspace(
+  _prevState: CloneWorkspaceFormState | undefined,
+  formData: FormData | { workspaceId: string }
+): Promise<CloneWorkspaceFormState> {
+  const user = await verifySession();
+
+  if (!user) {
+    return {
+      errors: {
+        _form: ["Não autenticado"],
+      },
+    };
+  }
+
+  let sourceWorkspaceId: string;
+  if (formData instanceof FormData) {
+    sourceWorkspaceId = formData.get("workspaceId") as string;
+  } else {
+    sourceWorkspaceId = formData.workspaceId;
+  }
+
+  if (!sourceWorkspaceId) {
+    return {
+      errors: {
+        _form: ["ID do workspace inválido"],
+      },
+    };
+  }
+
+  const limitCheck = await checkWorkspaceLimit(user.id);
+  if (!limitCheck.allowed) {
+    return {
+      errors: {
+        _form: ["Limite de workspaces atingido. Faça o upgrade para o plano Pro."],
+      },
+    };
+  }
+
+  try {
+    const sourceWorkspace = await db.workspace.findFirst({
+      where: {
+        id: sourceWorkspaceId,
+        deletedAt: null,
+        ownerId: user.id,
+      },
+    });
+
+    if (!sourceWorkspace) {
+      return {
+        errors: {
+          _form: ["Workspace não encontrado ou sem permissão"],
+        },
+      };
+    }
+
+    const newWorkspaceName = buildClonedWorkspaceName(sourceWorkspace.name);
+
+    const newWorkspaceId = await db.$transaction(
+      async (transactionClient) => {
+        const newWorkspace = await transactionClient.workspace.create({
+          data: {
+            name: newWorkspaceName,
+            ownerId: user.id,
+          },
+        });
+
+        await transactionClient.workspaceUser.create({
+          data: {
+            workspaceId: newWorkspace.id,
+            userId: user.id,
+          },
+        });
+
+        const sourceCategories = await transactionClient.category.findMany({
+          where: { workspaceId: sourceWorkspaceId },
+          orderBy: { createdAt: "asc" },
+        });
+
+        const categoryIdMap = new Map<string, string>();
+
+        for (const category of sourceCategories) {
+          const created = await transactionClient.category.create({
+            data: {
+              workspaceId: newWorkspace.id,
+              ownerId: user.id,
+              name: category.name,
+              type: category.type,
+              color: category.color,
+              deletedAt: category.deletedAt,
+              createdAt: category.createdAt,
+              updatedAt: category.updatedAt,
+            },
+          });
+          categoryIdMap.set(category.id, created.id);
+        }
+
+        const sourceTemplates = await transactionClient.transactionTemplate.findMany({
+          where: { workspaceId: sourceWorkspaceId },
+          orderBy: { createdAt: "asc" },
+        });
+
+        const templateIdMap = new Map<string, string>();
+
+        for (const template of sourceTemplates) {
+          const mappedCategoryId = mapOptionalForeignKey(
+            template.categoryId,
+            categoryIdMap
+          );
+
+          const created = await transactionClient.transactionTemplate.create({
+            data: {
+              workspaceId: newWorkspace.id,
+              ownerId: user.id,
+              categoryId: mappedCategoryId,
+              description: template.description,
+              baseAmount: template.baseAmount,
+              frequency: template.frequency,
+              startDate: template.startDate,
+              active: template.active,
+              deletedAt: template.deletedAt,
+              createdAt: template.createdAt,
+              updatedAt: template.updatedAt,
+            },
+          });
+          templateIdMap.set(template.id, created.id);
+        }
+
+        const sourceTransactions = await transactionClient.transaction.findMany({
+          where: { workspaceId: sourceWorkspaceId },
+          orderBy: { createdAt: "asc" },
+        });
+
+        for (const transactionRow of sourceTransactions) {
+          const mappedCategoryId = mapOptionalForeignKey(
+            transactionRow.categoryId,
+            categoryIdMap
+          );
+          const mappedTemplateId = mapOptionalForeignKey(
+            transactionRow.templateId,
+            templateIdMap
+          );
+
+          await transactionClient.transaction.create({
+            data: {
+              workspaceId: newWorkspace.id,
+              ownerId: user.id,
+              categoryId: mappedCategoryId,
+              templateId: mappedTemplateId,
+              description: transactionRow.description,
+              amount: transactionRow.amount,
+              date: transactionRow.date,
+              isPaid: transactionRow.isPaid,
+              paidAt: transactionRow.paidAt,
+              deletedAt: transactionRow.deletedAt,
+              createdAt: transactionRow.createdAt,
+              updatedAt: transactionRow.updatedAt,
+            },
+          });
+        }
+
+        return newWorkspace.id;
+      },
+      {
+        maxWait: 10_000,
+        timeout: 60_000,
+      }
+    );
+
+    revalidatePath("/workspace");
+    revalidatePath(`/workspace/${newWorkspaceId}/dashboard`);
+
+    return {
+      success: true,
+      newWorkspaceId,
+    };
+  } catch (error: unknown) {
+    console.error("Clone workspace error:", error);
+    return {
+      errors: {
+        _form: ["Erro ao clonar workspace. Tente novamente."],
       },
     };
   }

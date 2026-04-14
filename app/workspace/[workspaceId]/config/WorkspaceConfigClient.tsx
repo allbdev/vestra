@@ -6,10 +6,11 @@ import { InviteUserModal } from "@/app/components/InviteUserModal";
 import { RemoveUserModal } from "@/app/components/RemoveUserModal";
 import { EditWorkspaceModal } from "@/app/components/EditWorkspaceModal";
 import { DeleteWorkspaceModal } from "@/app/components/DeleteWorkspaceModal";
+import { CloneWorkspaceModal } from "@/app/components/CloneWorkspaceModal";
 import { useRouter } from "next/navigation";
 import type { WorkspaceConfigData } from "@/app/lib/workspace-config-data";
 import { Title } from "@/app/components/Title";
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { FiCopy, FiEdit, FiTrash } from "react-icons/fi";
 
 interface WorkspaceConfigClientProps {
   workspace: WorkspaceConfigData;
@@ -20,6 +21,7 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
 
   const handleInviteSent = () => {
     // Refresh the page to show updated user list
@@ -66,6 +68,13 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
                 title="Editar nome do workspace"
               >
                 <FiEdit className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setIsCloneModalOpen(true)}
+                className="p-2 rounded-lg hover:bg-card-hover transition-colors text-muted hover:text-primary"
+                title="Clonar workspace"
+              >
+                <FiCopy className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
@@ -128,6 +137,12 @@ export function WorkspaceConfigClient({ workspace }: WorkspaceConfigClientProps)
         onClose={() => setIsEditModalOpen(false)}
         workspaceId={workspace.id}
         currentName={workspace.name}
+      />
+
+      <CloneWorkspaceModal
+        isOpen={isCloneModalOpen}
+        onClose={() => setIsCloneModalOpen(false)}
+        workspaceId={workspace.id}
       />
 
       <DeleteWorkspaceModal
